@@ -163,7 +163,7 @@ async function persist(l,create){
   if(ON){await dbSet(l,create);return}
   var i=lots.findIndex(function(x){return x.c===l.c});if(i<0)lots.push(l);else lots[i]=l;sset('lots',lots);
 }
-function names(){var s={};lots.forEach(function(l){['r','pm','ps','pc','tu'].forEach(function(k){if(l[k])s[l[k]]=1})});var y=$('#yo').value.trim();if(y)s[y]=1;$('#nombres').innerHTML=Object.keys(s).sort().map(function(n){return '<option value="'+esc(n)+'">'}).join('')}
+function names(){var s={};lots.forEach(function(l){['r','pm','ps','pc','tu'].forEach(function(k){if(l[k])s[nm(l[k])]=1})});var y=$('#yo').value.trim();if(y)s[y]=1;$('#nombres').innerHTML=Object.keys(s).sort().map(function(n){return '<option value="'+esc(n)+'">'}).join('')}
 
 function baseUrl(){return (sget('base','')||location.href.split('#')[0]).trim().split('#')[0]}
 var LIM=140;
@@ -172,14 +172,16 @@ function urlFor(l){return baseUrl()+(ON?'#id='+encodeURIComponent(l.c||'x'):pack
 function qrSvg(t){var q;try{q=qrcode(0,'M');q.addData(t);q.make()}catch(e){q=qrcode(0,'L');q.addData(t);q.make()}return q.createSvgTag({cellSize:4,margin:0,scalable:true})}
 function exval(){var e=$('#explante').value;return /^Otro/.test(e)&&$('#exotro').value.trim()?'Otro: '+$('#exotro').value.trim():e}
 function v(i){return $('#'+i).value.trim()}
-function form(){return {s:v('especie'),o:$('#origen').value,d:v('odet'),e:exval(),f:$('#fecha').value,p:v('proc'),m:v('medio'),i:v('incub'),n:v('notas'),t:$('#estado').value,td:today,to:v('eobs'),r:v('yo'),pm:v('pm'),ps:v('ps'),pc:v('pc')}}
+function nm(s){return (s||'').trim().replace(/\s+/g,' ').toLowerCase().replace(/(^|\s)\S/g,function(c){return c.toUpperCase()})}
+function slug(s){return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,'-').replace(/^-|-$/g,'')}
+function form(){return {s:v('especie'),o:$('#origen').value,d:v('odet'),e:exval(),f:$('#fecha').value,p:v('proc'),m:v('medio'),i:v('incub'),n:v('notas'),t:$('#estado').value,td:today,to:v('eobs'),r:nm(v('yo')),pm:nm(v('pm')),ps:nm(v('ps')),pc:nm(v('pc'))}}
 function meter(){
   $('#liteBox').classList.toggle('hide',ON);if(ON)return;
   var n=urlFor(form()).length,t,c;if(n<400){t='Cómodo';c='var(--ok)'}else if(n<1000){t='Denso: imprime el QR de al menos 3 cm';c='var(--warn)'}else if(n<2300){t='Muy denso: usa etiqueta de 4 cm o más';c='var(--bad)'}else{t='Demasiado largo para el QR: acorta algún texto';c='var(--bad)'}
   $('#meter').innerHTML='Tamaño del QR: <span style="color:'+c+'">'+t+'</span> ('+n+' caracteres)'}
 ['input','change'].forEach(function(ev){$('#p1').addEventListener(ev,meter)});
 $('#explante').onchange=function(){$('#exotro').classList.toggle('hide',!/^Otro/.test(this.value))};
-$('#yo').value=sget('yo','');$('#yo').onchange=function(){sset('yo',this.value.trim());names()};
+$('#yo').value=nm(sget('yo',''));$('#yo').onchange=function(){this.value=nm(this.value);sset('yo',this.value);names()};
 
 function showLabel(l){
   cur=l;$('#lcode').textContent=l.c;
@@ -217,7 +219,7 @@ $('#save').onclick=async function(){
   try{
     if(editing){l.c=editing.c;l.ts=editing.ts;l.r=editing.r||l.r;l.td=(editing.t===l.t)?(editing.td||today):today;if(editing.t!==l.t)l.tu=l.r;else if(editing.tu)l.tu=editing.tu;await persist(l,false)}
     else{
-      await refresh();var base='LOT-'+l.f.replace(/-/g,'').slice(2)+'-',mx=0;
+      await refresh();var base=(slug(l.r)||'LOT')+'-',mx=0;
       lots.forEach(function(x){if(x.c.indexOf(base)===0){var k=+x.c.slice(base.length);if(k>mx)mx=k}});
       l.ts=Date.now();
       for(var t=1;t<=8;t++){l.c=base+String(mx+t).padStart(3,'0');try{await persist(l,true);break}catch(e){if(!ON||t===8)throw e}}
@@ -227,7 +229,7 @@ $('#save').onclick=async function(){
   b.disabled=false;
 };
 $('#upd').onclick=async function(){if(!cur)return;
-  cur.t=$('#ustado').value;cur.td=$('#udate').value||today;cur.to=v('uobs');cur.tu=v('yo');
+  cur.t=$('#ustado').value;cur.td=$('#udate').value||today;cur.to=v('uobs');cur.tu=nm(v('yo'));
   try{await persist(cur,false);await refresh();showLabel(cur)}catch(e){alert('No se pudo guardar el estado.')}};
 $('#del').onclick=async function(){if(!cur||!confirm('¿Eliminar el lote '+cur.c+'? Se borrará para todas las personas y no se puede deshacer.'))return;
   try{if(ON)await dbDel(cur.c);else{lots=lots.filter(function(x){return x.c!==cur.c});sset('lots',lots)}cur=null;$('#label').classList.add('hide');await refresh();tab(2)}catch(e){alert('No se pudo eliminar.')}};

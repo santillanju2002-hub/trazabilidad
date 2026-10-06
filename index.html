@@ -35,6 +35,10 @@ button.dng{background:transparent;color:var(--bad);border:1px solid var(--bad)}
 .hide{display:none}.note{font-size:12px;color:var(--mut)}#stat{font-size:13px;font-weight:600;margin-bottom:10px}
 .flt{display:flex;gap:8px;margin-bottom:6px}
 @media print{body *{visibility:hidden}#label,#label *{visibility:visible}#label .np,#label .np *{display:none!important}#label{position:absolute;left:0;top:0;width:100%;border:0}#label .qr{width:70%;max-width:none}}
+#sheet{display:none}
+#sheet .pl{display:flex;gap:8px;align-items:center;border:1px dashed #888;padding:6px;margin:3px;color:#000;background:#fff;font-size:11px;line-height:1.35;break-inside:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+#sheet .pq{width:84px;flex:none}#sheet .pq svg{width:100%;height:auto;display:block}
+@media print{body.ps .w{display:none!important}body.ps #sheet,body.ps #sheet *{visibility:visible}body.ps #sheet.grid{display:flex;flex-wrap:wrap;position:absolute;left:0;top:0;width:100%}body.ps #sheet.grid .pl{width:48%}body.ps #sheet.one{display:block}body.ps #sheet.one .pl{page-break-after:always;border:0;font-size:15px;margin:0}body.ps #sheet.one .pq{width:150px}}
 </style>
 </head>
 <body>
@@ -54,23 +58,26 @@ button.dng{background:transparent;color:var(--bad);border:1px solid var(--bad)}
   <div class="tabs"><button id="t1" class="on">Nuevo lote</button><button id="t2">Lotes (<span id="cnt">0</span>)</button></div>
 
   <div id="p1" class="card">
-    <h2 style="margin-top:0">1. Responsables</h2>
+    <h2 style="margin-top:0">1. Etapa o procedimiento</h2>
+    <label>¿Qué vas a hacer?</label><select id="etapa"></select>
+    <div class="note" id="afn"></div>
+    <label>Lote de origen (si es repique o trasplante de otro lote)</label><select id="lo"></select>
+    <label>Número de pasaje (subcultivo)</label><input type="number" min="1" id="pa" value="1" inputmode="numeric">
+
+    <h2>2. Responsables</h2>
     <label>Medio de cultivo preparado por</label><input id="pm" list="nombres" placeholder="Nombre de quien preparó el medio">
     <label>Sembrado por</label><input id="ps" list="nombres" placeholder="Nombre de quien sembró">
     <label>Operador en cámara de flujo</label><input id="pc" list="nombres" placeholder="Nombre de quien trabajó en la cámara">
 
-    <h2>2. Material vegetal</h2>
+    <h2>3. Material vegetal</h2>
     <label>Especie / variedad</label><input id="especie" placeholder="Ej.: Musa AAA cv. Williams">
     <label>Origen del material</label><select id="origen"></select>
     <label>Detalle del origen</label><textarea id="odet" placeholder="Ej.: planta madre del invernadero 2, edad 8 meses; o: subcultivo 3 del lote LOT-260915-002"></textarea>
     <label>Tipo de explante</label><select id="explante"></select>
     <input id="exotro" class="hide" placeholder="Especifica el explante" style="margin-top:8px">
 
-    <h2>3. Siembra</h2>
+    <h2>4. Siembra</h2>
     <label>Fecha de siembra</label><input type="date" id="fecha">
-    <label>Etapa o procedimiento</label><select id="etapa"></select>
-    <label>Lote de origen (si es repique o trasplante de otro lote)</label><select id="lo"></select>
-    <label>Número de pasaje (subcultivo)</label><input type="number" min="1" id="pa" value="1" inputmode="numeric">
     <label>Procedimiento (desinfección y siembra)</label><textarea id="proc" placeholder="Ej.: lavado con detergente, etanol 70% 30 s, NaClO 1% 10 min, 3 enjuagues con agua estéril..."></textarea>
     <label>Medio de cultivo</label><textarea id="medio" style="min-height:64px" placeholder="Ej.: MS + 1 mg/L BAP + 30 g/L sacarosa, pH 5.8"></textarea>
     <label>Tipo de recipiente</label><select id="rec"></select>
@@ -78,11 +85,12 @@ button.dng{background:transparent;color:var(--bad);border:1px solid var(--bad)}
     <div class="note" id="tot"></div>
     <label>Condiciones de incubación (opcional)</label><input id="incub" placeholder="Ej.: 25 °C, fotoperiodo 16/8 h">
 
-    <h2>4. Estado y sanidad</h2>
+    <h2>5. Estado y sanidad</h2>
     <label>Estado del lote</label><select id="estado"></select>
     <label>Observaciones del estado (opcional)</label><textarea id="eobs" style="min-height:64px"></textarea>
     <label>Notas (opcional)</label><textarea id="notas"></textarea>
     <div id="liteBox"><label style="display:flex;gap:8px;align-items:flex-start;font-weight:500"><input type="checkbox" id="lite" style="width:auto;margin-top:4px"> QR ligero: recorta textos largos dentro del QR (modo local).</label><div id="meter" class="note"></div></div>
+    <div id="prev" class="note" style="font-size:14px;margin-top:10px"></div>
     <button id="save">Registrar lote y generar QR</button>
     <button id="cancel" class="sec hide">Cancelar edición</button>
   </div>
@@ -96,7 +104,8 @@ button.dng{background:transparent;color:var(--bad);border:1px solid var(--bad)}
     <div class="code" id="lcode"></div>
     <div class="qr" id="lqr"></div>
     <div class="note" style="text-align:center" id="lsum"></div>
-    <button id="print" class="np">🖨️ Imprimir etiqueta</button>
+    <button id="print" class="np">🖨️ Imprimir esta etiqueta</button>
+    <div id="prAll" class="np hide"><button id="pgrid" class="sec"></button><button id="pone" class="sec"></button></div>
     <button id="edit" class="sec np">✏️ Editar lote</button>
     <button id="del" class="dng np">🗑️ Eliminar lote</button>
     <div class="np">
@@ -117,6 +126,7 @@ button.dng{background:transparent;color:var(--bad);border:1px solid var(--bad)}
 </div>
 </div>
 
+<div id="sheet"></div>
 <script>
 // ====== CONFIGURACIÓN DE FIREBASE: pega aquí tus dos datos (ver guía) ======
 var FB={projectId:'trazabilidad-invitro',apiKey:'AIzaSyAGMD8LsyYSLEgehCe41lPwfql5B4C0hQU'};
@@ -138,7 +148,7 @@ var ET=['Establecimiento (introducción del explante)','Multiplicación','Repiqu
 var RC=['Tubo de ensayo','Tarro de mermelada','Frasco de vidrio mediano','Frasco grande','Erlenmeyer','Caja Petri','Frasco GA7 / Magenta','Bolsa o biorreactor','Otro'];
 function opts(a){return a.map(function(x){return '<option>'+x+'</option>'}).join('')}
 var eh='';for(var g in EX)eh+='<optgroup label="'+g+'">'+opts(EX[g])+'</optgroup>';
-$('#explante').innerHTML=eh;$('#etapa').innerHTML=opts(ET);$('#rec').innerHTML=opts(RC);$('#origen').innerHTML=opts(OR);$('#estado').innerHTML=opts(ES);$('#ustado').innerHTML=opts(ES);$('#fe').innerHTML='<option value="">Todos los estados</option>'+opts(ES);
+$('#explante').innerHTML=eh;$('#etapa').innerHTML='<option value="">Selecciona la etapa…</option>'+opts(ET);$('#rec').innerHTML=opts(RC);$('#origen').innerHTML=opts(OR);$('#estado').innerHTML=opts(ES);$('#ustado').innerHTML=opts(ES);$('#fe').innerHTML='<option value="">Todos los estados</option>'+opts(ES);
 
 var mem={};
 function sget(k,d){try{var v=localStorage.getItem(k);return v===null?(k in mem?mem[k]:d):JSON.parse(v)}catch(e){return k in mem?mem[k]:d}}
@@ -165,7 +175,7 @@ function setStat(ok){$('#stat').innerHTML=!ON?'💾 Modo local: los lotes solo s
 var lots=[],cur=null,editing=null;
 async function refresh(){
   if(ON){try{lots=await dbList();setStat(true)}catch(e){setStat(false)}}else{lots=sget('lots',[]);setStat(true)}
-  lots.sort(function(a,b){return (b.ts||0)-(a.ts||0)});renderList();names();fillOrigin();
+  lots.sort(function(a,b){return (b.ts||0)-(a.ts||0)});renderList();names();fillOrigin();prev();
 }
 async function persist(l,create){
   if(ON){await dbSet(l,create);return}
@@ -176,6 +186,17 @@ function names(){var s={};lots.forEach(function(l){['r','pm','ps','pc','tu'].for
 function fillOrigin(){var sel=$('#lo'),c=sel.value;sel.innerHTML='<option value="">(Ninguno: material nuevo)</option>'+lots.filter(function(x){return !editing||x.c!==editing.c}).map(function(x){return '<option value="'+esc(x.c)+'">'+esc(x.c)+' · '+esc(x.e)+' · '+esc(fmt(x.f))+'</option>'}).join('');sel.value=c}
 $('#lo').onchange=function(){var p=lots.filter(function(x){return x.c===$('#lo').value})[0];$('#pa').value=p?(+p.pa||1)+1:1};
 function tot(){var n=+v('nf'),m=+v('vm');$('#tot').textContent=n&&m?'Total de medio: '+(Math.round(n*m*100)/100)+' ml ('+n+' × '+m+' ml)':''}
+function autofill(){
+  if(editing)return;var e=$('#etapa').value,r=nm(v('yo')),n=$('#afn');n.textContent='';
+  if(!e)return;if(!r){n.textContent='Escribe tu nombre arriba para rellenar automáticamente con tus lotes anteriores.';return}
+  var k=slug(r),p=lots.filter(function(l){return slug(l.r||'')===k&&l.et===e}).sort(function(a,b){return (b.ts||0)-(a.ts||0)})[0];
+  if(!p)return;
+  $('#especie').value=p.s||'';$('#origen').value=p.o||OR[0];$('#odet').value=p.d||'';
+  var x=p.e||'';if(/^Otro: /.test(x)){$('#explante').value='Otro (especificar)';$('#exotro').value=x.slice(6);$('#exotro').classList.remove('hide')}else{if(x)$('#explante').value=x;$('#exotro').classList.add('hide')}
+  $('#proc').value=p.p||'';$('#medio').value=p.m||'';$('#incub').value=p.i||'';$('#rec').value=p.rc||RC[0];$('#nf').value=p.nf||'';$('#vm').value=p.vm||'';$('#pm').value=p.pm||'';$('#ps').value=p.ps||'';$('#pc').value=p.pc||'';
+  n.textContent='✨ Rellené los datos con tu último lote de «'+e+'» ('+p.c+'). Cambia lo que necesites.';meter();
+}
+$('#etapa').onchange=autofill;
 function baseUrl(){return (sget('base','')||location.href.split('#')[0]).trim().split('#')[0]}
 var LIM=140;
 function lite(l){if(!$('#lite').checked)return l;var o={};for(var k in l)o[k]=(/^(p|n|d|to)$/.test(k)&&typeof l[k]==='string'&&l[k].length>LIM)?l[k].slice(0,LIM)+'…':l[k];return o}
@@ -183,30 +204,39 @@ function urlFor(l){return baseUrl()+(ON?'#id='+encodeURIComponent(l.c||'x'):pack
 function qrSvg(t){var q;try{q=qrcode(0,'M');q.addData(t);q.make()}catch(e){q=qrcode(0,'L');q.addData(t);q.make()}return q.createSvgTag({cellSize:4,margin:0,scalable:true})}
 function exval(){var e=$('#explante').value;return /^Otro/.test(e)&&$('#exotro').value.trim()?'Otro: '+$('#exotro').value.trim():e}
 function v(i){return $('#'+i).value.trim()}
+var PAL=['#3b82f6','#f59e0b','#a855f7','#14b8a6','#ec4899','#84cc16','#06b6d4','#d97706','#6366f1','#22c55e','#d946ef','#0ea5e9'];
+var FIX={'JUAN-ARROYO':'#e5484d'};
+function hcol(k){var h=0;for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0;return PAL[h%PAL.length]}
+function cmap(){var m={};lots.slice().sort(function(a,b){return (a.ts||0)-(b.ts||0)}).forEach(function(l){var k=slug(l.r||'');if(k&&l.cl&&!m[k])m[k]=l.cl});return m}
+function colorOf(l,m){var k=slug(l.r||'');return FIX[k]||(m&&m[k])||l.cl||hcol(k)}
+function pick(r){var k=slug(r||''),m=cmap();if(FIX[k])return FIX[k];if(m[k])return m[k];var u={};for(var x in m)u[m[x]]=1;var f=PAL.filter(function(c){return !u[c]});return f.length?f[0]:hcol(k)}
+function nextCode(r){var b=(slug(r)||'LOT')+'-',mx=0;lots.forEach(function(x){if(x.c.indexOf(b)===0){var k=+x.c.slice(b.length);if(k>mx)mx=k}});return b+String(mx+1).padStart(3,'0')}
+function prev(){var e=$('#prev');if(!e)return;if(editing){e.textContent='Editando '+editing.c;return}var r=nm(v('yo'));if(!r){e.textContent='';return}var n=+v('nf');e.innerHTML='Se registrará como: <b style="font-size:16px;color:'+pick(r)+'">'+esc(nextCode(r)+(n?' de '+n:''))+'</b>'}
 function nm(s){return (s||'').trim().replace(/\s+/g,' ').toLowerCase().replace(/(^|\s)\S/g,function(c){return c.toUpperCase()})}
 function slug(s){return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,'-').replace(/^-|-$/g,'')}
 function form(){return {s:v('especie'),o:$('#origen').value,d:v('odet'),e:exval(),f:$('#fecha').value,p:v('proc'),m:v('medio'),i:v('incub'),n:v('notas'),t:$('#estado').value,td:today,to:v('eobs'),r:nm(v('yo')),pm:nm(v('pm')),ps:nm(v('ps')),pc:nm(v('pc')),et:$('#etapa').value,lo:$('#lo').value,pa:v('pa'),rc:$('#rec').value,nf:v('nf'),vm:v('vm')}}
 function meter(){
-  tot();$('#liteBox').classList.toggle('hide',ON);if(ON)return;
+  tot();prev();$('#liteBox').classList.toggle('hide',ON);if(ON)return;
   var n=urlFor(form()).length,t,c;if(n<400){t='Cómodo';c='var(--ok)'}else if(n<1000){t='Denso: imprime el QR de al menos 3 cm';c='var(--warn)'}else if(n<2300){t='Muy denso: usa etiqueta de 4 cm o más';c='var(--bad)'}else{t='Demasiado largo para el QR: acorta algún texto';c='var(--bad)'}
   $('#meter').innerHTML='Tamaño del QR: <span style="color:'+c+'">'+t+'</span> ('+n+' caracteres)'}
 ['input','change'].forEach(function(ev){$('#p1').addEventListener(ev,meter)});
 $('#explante').onchange=function(){$('#exotro').classList.toggle('hide',!/^Otro/.test(this.value))};
-$('#yo').value=nm(sget('yo',''));$('#yo').onchange=function(){this.value=nm(this.value);sset('yo',this.value);names()};
+$('#yo').value=nm(sget('yo',''));$('#yo').onchange=function(){this.value=nm(this.value);sset('yo',this.value);names();prev();autofill()};
 
 function showLabel(l){
-  cur=l;$('#lcode').textContent=l.c+(l.nf?' de '+l.nf:'');
+  cur=l;$('#lcode').textContent=l.c+(l.nf?' de '+l.nf:'');$('#lcode').style.color=colorOf(l,cmap());
   try{$('#lqr').innerHTML=qrSvg(urlFor(l))}catch(e){$('#lqr').textContent='Texto demasiado largo para el QR. Acorta algún texto.'}
   $('#lsum').textContent=(l.et?l.et+' · ':'')+(l.nf&&l.rc?l.nf+' × '+l.rc.toLowerCase()+(l.vm?' de '+l.vm+' ml':'')+' · ':'')+l.e+' · siembra '+fmt(l.f)+' · '+(l.t||'En evaluación')+(l.ps?' · sembró '+l.ps:'');
+  $('#prAll').classList.toggle('hide',!(+l.nf>1));$('#pgrid').textContent='🖨️ Las '+l.nf+' etiquetas en una hoja';$('#pone').textContent='🖨️ '+l.nf+' etiquetas, una por página';
   $('#ustado').value=l.t||ES[0];$('#udate').value=today;$('#uobs').value=l.to||'';
   $('#updn').textContent=ON?'El QR no cambia: quien lo escanee verá siempre el estado actualizado.':'Los QR ya impresos siguen mostrando el estado de cuando se generaron.';
   $('#label').classList.remove('hide');$('#label').scrollIntoView({behavior:'smooth'});
 }
 function renderList(){
-  var q=$('#q').value.trim().toLowerCase(),fe=$('#fe').value;
+  var q=$('#q').value.trim().toLowerCase(),fe=$('#fe').value,CM=cmap();
   var vis=lots.filter(function(l){if(fe&&l.t!==fe)return false;if(!q)return true;return [l.c,l.s,l.e,l.o,l.r,l.pm,l.ps,l.pc,l.t].join(' ').toLowerCase().indexOf(q)>=0});
   $('#cnt').textContent=lots.length;$('#empty').style.display=vis.length?'none':'block';$('#empty').textContent=lots.length?'Ningún lote coincide con la búsqueda.':'Aún no hay lotes registrados.';
-  $('#list').innerHTML=vis.map(function(l){return '<div class="lot" data-c="'+esc(l.c)+'"><div><b>'+esc(l.c)+'</b><small>'+esc(l.e)+' · '+esc(fmt(l.f))+(l.s?' · '+esc(l.s):'')+'</small><small>'+(l.ps?'Sembró: '+esc(l.ps)+' · ':'')+'Registró: '+esc(l.r||'—')+'</small>'+((l.et||l.nf)?'<small>'+esc(l.et||'')+(l.nf?(l.et?' · ':'')+esc(l.nf)+' × '+esc(l.rc||'recipientes')+(l.vm?' · '+esc(l.vm)+' ml':''):'')+'</small>':'')+'<span class="badge '+sc(l.t)+'">'+esc(l.t||'En evaluación')+'</span></div><span>›</span></div>'}).join('');
+  $('#list').innerHTML=vis.map(function(l){return '<div class="lot" data-c="'+esc(l.c)+'"><div><b style="color:'+colorOf(l,CM)+'">'+esc(l.c+(l.nf?' de '+l.nf:''))+'</b><small>'+esc(l.e)+' · '+esc(fmt(l.f))+(l.s?' · '+esc(l.s):'')+'</small><small>'+(l.ps?'Sembró: '+esc(l.ps)+' · ':'')+'Registró: '+esc(l.r||'—')+'</small>'+((l.et||l.nf)?'<small>'+esc(l.et||'')+(l.nf?(l.et?' · ':'')+esc(l.nf)+' × '+esc(l.rc||'recipientes')+(l.vm?' · '+esc(l.vm)+' ml':''):'')+'</small>':'')+'<span class="badge '+sc(l.t)+'">'+esc(l.t||'En evaluación')+'</span></div><span>›</span></div>'}).join('');
   Array.prototype.forEach.call(document.querySelectorAll('.lot'),function(el){el.onclick=function(){var l=lots.filter(function(x){return x.c===el.dataset.c})[0];if(l)showLabel(l)}});
 }
 $('#q').oninput=renderList;$('#fe').onchange=renderList;
@@ -215,24 +245,25 @@ $('#t1').onclick=function(){tab(1)};$('#t2').onclick=function(){tab(2);refresh()
 $('#fecha').value=today;$('#base').value=sget('base','');
 $('#base').onchange=function(){sset('base',this.value.trim());meter()};
 
-function clearForm(){['especie','odet','proc','medio','incub','notas','eobs','exotro','pm','ps','pc'].forEach(function(i){$('#'+i).value=''});$('#estado').value=ES[0];$('#origen').selectedIndex=0;$('#explante').selectedIndex=0;$('#etapa').selectedIndex=0;$('#rec').selectedIndex=0;$('#nf').value='';$('#vm').value='';$('#pa').value=1;$('#lo').value='';$('#exotro').classList.add('hide');$('#fecha').value=today;meter()}
+function clearForm(){['especie','odet','proc','medio','incub','notas','eobs','exotro','pm','ps','pc'].forEach(function(i){$('#'+i).value=''});$('#estado').value=ES[0];$('#origen').selectedIndex=0;$('#explante').selectedIndex=0;$('#etapa').selectedIndex=0;$('#rec').selectedIndex=0;$('#nf').value='';$('#vm').value='';$('#pa').value=1;$('#lo').value='';$('#afn').textContent='';$('#exotro').classList.add('hide');$('#fecha').value=today;meter()}
 function stopEdit(){editing=null;clearForm();$('#save').textContent='Registrar lote y generar QR';$('#cancel').classList.add('hide')}
-function startEdit(l){editing=l;tab(1);$('#especie').value=l.s||'';$('#origen').value=l.o||OR[0];$('#odet').value=l.d||'';var e=l.e||'';if(/^Otro: /.test(e)){$('#explante').value='Otro (especificar)';$('#exotro').value=e.slice(6);$('#exotro').classList.remove('hide')}else{$('#explante').value=e;$('#exotro').classList.add('hide')}$('#fecha').value=l.f||today;$('#proc').value=l.p||'';$('#medio').value=l.m||'';$('#incub').value=l.i||'';$('#notas').value=l.n||'';$('#estado').value=l.t||ES[0];$('#eobs').value=l.to||'';$('#pm').value=l.pm||'';$('#ps').value=l.ps||'';$('#pc').value=l.pc||'';fillOrigin();$('#etapa').value=l.et||ET[0];$('#lo').value=l.lo||'';$('#pa').value=l.pa||1;$('#rec').value=l.rc||RC[0];$('#nf').value=l.nf||'';$('#vm').value=l.vm||'';$('#save').textContent='Guardar cambios';$('#cancel').classList.remove('hide');meter();window.scrollTo(0,0)}
+function startEdit(l){editing=l;tab(1);$('#especie').value=l.s||'';$('#origen').value=l.o||OR[0];$('#odet').value=l.d||'';var e=l.e||'';if(/^Otro: /.test(e)){$('#explante').value='Otro (especificar)';$('#exotro').value=e.slice(6);$('#exotro').classList.remove('hide')}else{$('#explante').value=e;$('#exotro').classList.add('hide')}$('#fecha').value=l.f||today;$('#proc').value=l.p||'';$('#medio').value=l.m||'';$('#incub').value=l.i||'';$('#notas').value=l.n||'';$('#estado').value=l.t||ES[0];$('#eobs').value=l.to||'';$('#pm').value=l.pm||'';$('#ps').value=l.ps||'';$('#pc').value=l.pc||'';fillOrigin();$('#etapa').value=l.et||'';$('#lo').value=l.lo||'';$('#pa').value=l.pa||1;$('#rec').value=l.rc||RC[0];$('#nf').value=l.nf||'';$('#vm').value=l.vm||'';$('#save').textContent='Guardar cambios';$('#cancel').classList.remove('hide');meter();window.scrollTo(0,0)}
 $('#cancel').onclick=stopEdit;
 $('#edit').onclick=function(){if(cur)startEdit(cur)};
 
 $('#save').onclick=async function(){
   var l=form();if(!l.r){alert('Escribe tu nombre arriba antes de registrar.');return}
   if(!l.f){alert('Indica la fecha de siembra.');return}
+  if(!l.et){alert('Selecciona la etapa o procedimiento.');return}
   if(!l.p||!l.m){alert('Completa el procedimiento y el medio.');return}
   if(!ON&&urlFor(l).length>=2300){alert('El texto es demasiado largo para caber en un QR. Acorta algún texto o conecta la base de datos.');return}
   var b=$('#save');b.disabled=true;
   try{
-    if(editing){l.c=editing.c;l.ts=editing.ts;l.r=editing.r||l.r;l.td=(editing.t===l.t)?(editing.td||today):today;if(editing.t!==l.t)l.tu=l.r;else if(editing.tu)l.tu=editing.tu;await persist(l,false)}
+    if(editing){l.c=editing.c;l.ts=editing.ts;if(editing.cl)l.cl=editing.cl;l.r=editing.r||l.r;l.td=(editing.t===l.t)?(editing.td||today):today;if(editing.t!==l.t)l.tu=l.r;else if(editing.tu)l.tu=editing.tu;await persist(l,false)}
     else{
       await refresh();var base=(slug(l.r)||'LOT')+'-',mx=0;
       lots.forEach(function(x){if(x.c.indexOf(base)===0){var k=+x.c.slice(base.length);if(k>mx)mx=k}});
-      l.ts=Date.now();
+      l.ts=Date.now();l.cl=pick(l.r);
       for(var t=1;t<=8;t++){l.c=base+String(mx+t).padStart(3,'0');try{await persist(l,true);break}catch(e){if(!ON||t===8)throw e}}
     }
     await refresh();showLabel(l);stopEdit();
@@ -244,7 +275,16 @@ $('#upd').onclick=async function(){if(!cur)return;
   try{await persist(cur,false);await refresh();showLabel(cur)}catch(e){alert('No se pudo guardar el estado.')}};
 $('#del').onclick=async function(){if(!cur||!confirm('¿Eliminar el lote '+cur.c+'? Se borrará para todas las personas y no se puede deshacer.'))return;
   try{if(ON)await dbDel(cur.c);else{lots=lots.filter(function(x){return x.c!==cur.c});sset('lots',lots)}cur=null;$('#label').classList.add('hide');await refresh();tab(2)}catch(e){alert('No se pudo eliminar.')}};
-$('#print').onclick=function(){window.print()};
+$('#print').onclick=function(){document.body.classList.remove('ps');window.print()};
+function printSheet(mode){
+  if(!cur)return;var n=+cur.nf||1,svg='';try{svg=qrSvg(urlFor(cur))}catch(e){alert('No se pudo generar el QR.');return}
+  var c=colorOf(cur,cmap()),h='';
+  for(var i=1;i<=n;i++)h+='<div class="pl"><div class="pq">'+svg+'</div><div class="pt"><b style="color:'+c+'">'+esc(cur.c+(cur.nf?' de '+cur.nf:''))+'</b><br>Frasco '+i+' de '+n+'<br>'+esc(cur.et||'')+'<br>'+esc(cur.e)+' · '+esc(fmt(cur.f))+'</div></div>';
+  var sh=$('#sheet');sh.className=mode;sh.innerHTML=h;document.body.classList.add('ps');
+  setTimeout(function(){window.print()},150);
+}
+$('#pgrid').onclick=function(){printSheet('grid')};$('#pone').onclick=function(){printSheet('one')};
+window.onafterprint=function(){document.body.classList.remove('ps')};
 $('#lite').checked=sget('lite',true);$('#lite').onchange=function(){sset('lite',this.checked);meter()};
 refresh();meter();
 setInterval(function(){if(ON&&!document.hidden&&!$('#app').classList.contains('hide')&&!$('#p1').querySelector(':focus'))refresh()},60000);
@@ -252,7 +292,7 @@ document.addEventListener('visibilitychange',function(){if(!document.hidden&&ON&
 
 // ---- Vista pública (al escanear el QR) ----
 function renderView(l){
-  $('#vcode').textContent=l.c;var d=dias(l.f);
+  $('#vcode').textContent=l.c+(l.nf?' de '+l.nf:'');$('#vcode').style.color=colorOf(l,null);var d=dias(l.f);
   var rows=[['Especie / variedad',l.s],['Origen del material',l.o],['Etapa',l.et],['Pasaje',l.pa],['Tipo de explante',l.e],['Fecha de siembra',fmt(l.f)],['Tiempo en cultivo',d===null?'':d+' días'],['Medio de cultivo',l.m],['Recipiente',l.rc],['Cantidad de recipientes',l.nf],['Medio por recipiente',l.vm?l.vm+' ml':''],['Total de medio',(l.nf&&l.vm)?(Math.round(l.nf*l.vm*100)/100)+' ml':''],['Incubación',l.i],['Registrado por',l.r],['Medio preparado por',l.pm],['Sembrado por',l.ps],['Operador en cámara',l.pc]];
   var h=rows.filter(function(r){return r[1]}).map(function(r){return '<div class="row"><span>'+esc(r[0])+'</span><span>'+esc(r[1])+'</span></div>'}).join('');
   if(l.lo)h+='<div class="row"><span>Lote de origen</span><span><a style="color:var(--acc2)" href="'+esc(baseUrl()+'#id='+encodeURIComponent(l.lo))+'" onclick="setTimeout(function(){location.reload()},50)">'+esc(l.lo)+'</a></span></div>';

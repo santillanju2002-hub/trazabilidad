@@ -11,18 +11,19 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1a13;--card:#17251c;--ink:#e6f2e9;--mut:#9ab5a1;--acc:#4fbf72;--acc2:#7fd99a;--line:#2a3f31}}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5;overflow-wrap:anywhere}
-.w{max-width:600px;margin:0 auto;padding:16px}
+.w{max-width:620px;margin:0 auto;padding:16px}
 h1{font-size:22px;margin:8px 0 2px}h2{font-size:15px;margin:18px 0 0;color:var(--acc2);border-bottom:1px solid var(--line);padding-bottom:4px}
-.sub{color:var(--mut);margin:0 0 14px;font-size:14px}
+.sub{color:var(--mut);margin:0 0 10px;font-size:14px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
 label{display:block;font-size:13px;font-weight:600;margin:12px 0 4px}
 input,select,textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit}
 textarea{min-height:90px;resize:vertical}
 button{font:inherit;border:0;border-radius:12px;padding:12px 16px;background:var(--acc);color:#fff;font-weight:600;cursor:pointer;width:100%;margin-top:14px}
-button.sec{background:transparent;color:var(--acc2);border:1px solid var(--line)}
+button:disabled{opacity:.6}button.sec{background:transparent;color:var(--acc2);border:1px solid var(--line)}
+button.dng{background:transparent;color:var(--bad);border:1px solid var(--bad)}
 .tabs{display:flex;gap:8px;margin-bottom:12px}.tabs button{margin:0;background:var(--card);color:var(--ink);border:1px solid var(--line)}
 .tabs button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
-.lot{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.lot{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);cursor:pointer}
 .lot:last-child{border:0}.lot b{color:var(--acc2)}.lot small{color:var(--mut);display:block}
 .qr{width:240px;max-width:75%;margin:10px auto;background:#fff;padding:8px;border-radius:10px}.qr svg{width:100%;height:auto;display:block}
 .code{text-align:center;font-weight:700;font-size:18px}
@@ -31,7 +32,8 @@ button.sec{background:transparent;color:var(--acc2);border:1px solid var(--line)
 .blk{padding:10px 0;border-bottom:1px solid var(--line)}.blk b{display:block;color:var(--mut);font-size:13px;font-weight:600;margin-bottom:3px}.blk p{margin:0;white-space:pre-wrap;font-size:15px}
 .badge{display:inline-block;color:#fff;border-radius:99px;padding:3px 11px;font-size:12px;font-weight:600;background:var(--acc)}
 .ok{background:var(--ok)}.bad{background:var(--bad)}.warn{background:var(--warn)}.info{background:var(--info)}
-button.dng{background:transparent;color:var(--bad);border:1px solid var(--bad)}.hide{display:none}.note{font-size:12px;color:var(--mut)}#meter{font-size:13px;font-weight:600;margin-top:8px}
+.hide{display:none}.note{font-size:12px;color:var(--mut)}#stat{font-size:13px;font-weight:600;margin-bottom:10px}
+.flt{display:flex;gap:8px;margin-bottom:6px}
 @media print{body *{visibility:hidden}#label,#label *{visibility:visible}#label .np,#label .np *{display:none!important}#label{position:absolute;left:0;top:0;width:100%;border:0}#label .qr{width:70%;max-width:none}}
 </style>
 </head>
@@ -40,39 +42,49 @@ button.dng{background:transparent;color:var(--bad);border:1px solid var(--bad)}.
 <div id="view" class="hide">
   <span class="badge">🌱 Trazabilidad in vitro</span>
   <h1 id="vcode"></h1><p class="sub">Información del lote</p>
-  <div class="card" id="vbody"></div>
-  <button class="sec" id="toApp">Registrar mis propios lotes</button>
+  <div class="card" id="vbody">Cargando…</div>
+  <button class="sec" id="toApp">Ver todos los lotes / registrar</button>
 </div>
 
 <div id="app">
-  <h1>🌱 Trazabilidad In Vitro</h1><p class="sub">Registra lotes y genera su código QR.</p>
-  <div class="tabs"><button id="t1" class="on">Nuevo lote</button><button id="t2">Mis lotes (<span id="cnt">0</span>)</button></div>
+  <h1>🌱 Trazabilidad In Vitro</h1>
+  <div id="stat"></div>
+  <div class="card"><label style="margin-top:0">Tu nombre (se guarda en este dispositivo)</label><input id="yo" placeholder="Ej.: Juan Santillán" list="nombres"></div>
+  <datalist id="nombres"></datalist>
+  <div class="tabs"><button id="t1" class="on">Nuevo lote</button><button id="t2">Lotes (<span id="cnt">0</span>)</button></div>
 
   <div id="p1" class="card">
-    <h2 style="margin-top:0">1. Material vegetal</h2>
+    <h2 style="margin-top:0">1. Responsables</h2>
+    <label>Medio de cultivo preparado por</label><input id="pm" list="nombres" placeholder="Nombre de quien preparó el medio">
+    <label>Sembrado por</label><input id="ps" list="nombres" placeholder="Nombre de quien sembró">
+    <label>Operador en cámara de flujo</label><input id="pc" list="nombres" placeholder="Nombre de quien trabajó en la cámara">
+
+    <h2>2. Material vegetal</h2>
     <label>Especie / variedad</label><input id="especie" placeholder="Ej.: Musa AAA cv. Williams">
     <label>Origen del material</label><select id="origen"></select>
     <label>Detalle del origen</label><textarea id="odet" placeholder="Ej.: planta madre del invernadero 2, edad 8 meses; o: subcultivo 3 del lote LOT-260915-002"></textarea>
     <label>Tipo de explante</label><select id="explante"></select>
     <input id="exotro" class="hide" placeholder="Especifica el explante" style="margin-top:8px">
 
-    <h2>2. Siembra</h2>
+    <h2>3. Siembra</h2>
     <label>Fecha de siembra</label><input type="date" id="fecha">
     <label>Procedimiento (desinfección y siembra)</label><textarea id="proc" placeholder="Ej.: lavado con detergente, etanol 70% 30 s, NaClO 1% 10 min, 3 enjuagues con agua estéril..."></textarea>
     <label>Medio de cultivo</label><textarea id="medio" style="min-height:64px" placeholder="Ej.: MS + 1 mg/L BAP + 30 g/L sacarosa, pH 5.8"></textarea>
     <label>Condiciones de incubación (opcional)</label><input id="incub" placeholder="Ej.: 25 °C, fotoperiodo 16/8 h">
 
-    <h2>3. Estado y sanidad</h2>
+    <h2>4. Estado y sanidad</h2>
     <label>Estado del lote</label><select id="estado"></select>
     <label>Observaciones del estado (opcional)</label><textarea id="eobs" style="min-height:64px"></textarea>
     <label>Notas (opcional)</label><textarea id="notas"></textarea>
-    <label style="display:flex;gap:8px;align-items:flex-start;font-weight:500"><input type="checkbox" id="lite" style="width:auto;margin-top:4px"> QR ligero (recomendado): recorta los textos largos dentro del QR para que sea fácil de escanear. El texto completo queda guardado en la app.</label>
-    <div id="meter" class="note"></div>
+    <div id="liteBox"><label style="display:flex;gap:8px;align-items:flex-start;font-weight:500"><input type="checkbox" id="lite" style="width:auto;margin-top:4px"> QR ligero: recorta textos largos dentro del QR (modo local).</label><div id="meter" class="note"></div></div>
     <button id="save">Registrar lote y generar QR</button>
     <button id="cancel" class="sec hide">Cancelar edición</button>
   </div>
 
-  <div id="p2" class="card hide"><div id="list"></div><p class="note" id="empty">Aún no hay lotes registrados.</p></div>
+  <div id="p2" class="card hide">
+    <div class="flt"><input id="q" placeholder="Buscar por código, persona, especie…"><select id="fe" style="max-width:48%"></select></div>
+    <div id="list"></div><p class="note" id="empty">Aún no hay lotes registrados.</p>
+  </div>
 
   <div id="label" class="card hide">
     <div class="code" id="lcode"></div>
@@ -86,21 +98,26 @@ button.dng{background:transparent;color:var(--bad);border:1px solid var(--bad)}.
       <select id="ustado"></select>
       <label>Fecha</label><input type="date" id="udate">
       <label>Observaciones</label><textarea id="uobs" style="min-height:64px"></textarea>
-      <button id="upd" class="sec">Guardar estado y generar nuevo QR</button>
-      <p class="note">Los QR ya impresos siguen mostrando el estado de cuando se generaron.</p>
+      <button id="upd" class="sec">Guardar estado</button>
+      <p class="note" id="updn"></p>
     </div>
   </div>
 
   <div class="card">
-    <label>Enlace del sitio (el que abrirá el QR)</label>
+    <label style="margin-top:0">Enlace del sitio (el que abrirá el QR)</label>
     <input id="base" placeholder="Pega aquí el enlace público de tu sitio">
-    <p class="note">Si abres la app desde tu enlace de GitHub, se usa solo. Los QR nuevos usan este enlace.</p>
+    <p class="note">Si abres la app desde tu enlace de GitHub, se usa solo.</p>
   </div>
 </div>
 </div>
 
 <script>
+// ====== CONFIGURACIÓN DE FIREBASE: pega aquí tus dos datos (ver guía) ======
+var FB={projectId:'trazabilidad-invitro',apiKey:'AIzaSyAGMD8LsyYSLEgehCe41lPwfql5B4C0hQU'};
+// ==========================================================================
 var $=function(s){return document.querySelector(s)};
+var ON=!!(FB.projectId&&FB.apiKey);
+var API='https://firestore.googleapis.com/v1/projects/'+FB.projectId+'/databases/(default)/documents/lotes';
 var EX={'Meristemos':['Meristemo apical','Meristemo medio','Meristemo basal','Domo meristemático','Meristemo axilar'],
 'Yemas':['Yema apical','Yema axilar','Yema lateral','Yema basal','Yema floral','Yema adventicia'],
 'Segmentos de tallo':['Segmento nodal','Segmento internodal','Segmento apical','Segmento medio','Segmento basal','Microesqueje','Estaca'],
@@ -113,7 +130,7 @@ var OR=['Planta madre de invernadero','Planta madre de campo','Planta madre de v
 var ES=['En evaluación','Sano (sin contaminación)','Contaminado: bacteria','Contaminado: hongo','Contaminado: levadura','Oxidación / fenolización','Descartado','Transferido a nuevo medio'];
 function opts(a){return a.map(function(x){return '<option>'+x+'</option>'}).join('')}
 var eh='';for(var g in EX)eh+='<optgroup label="'+g+'">'+opts(EX[g])+'</optgroup>';
-$('#explante').innerHTML=eh;$('#origen').innerHTML=opts(OR);$('#estado').innerHTML=opts(ES);$('#ustado').innerHTML=opts(ES);
+$('#explante').innerHTML=eh;$('#origen').innerHTML=opts(OR);$('#estado').innerHTML=opts(ES);$('#ustado').innerHTML=opts(ES);$('#fe').innerHTML='<option value="">Todos los estados</option>'+opts(ES);
 
 var mem={};
 function sget(k,d){try{var v=localStorage.getItem(k);return v===null?(k in mem?mem[k]:d):JSON.parse(v)}catch(e){return k in mem?mem[k]:d}}
@@ -128,68 +145,116 @@ function dias(d){var t=new Date(d+'T00:00:00');if(isNaN(t))return null;return Ma
 function sc(s){s=s||'';return /Contaminado|Descartado/.test(s)?'bad':/Oxida/.test(s)?'warn':/Sano|Transferido/.test(s)?'ok':'info'}
 var today=new Date().toISOString().slice(0,10);
 
-var lots=sget('lots',[]),cur=null;
+// ---- Base de datos (Firebase Firestore por REST) o modo local ----
+function K(){return 'key='+FB.apiKey}
+function fromDoc(d){return JSON.parse(d.fields.j.stringValue)}
+async function dbList(){var out=[],tok='';do{var r=await fetch(API+'?pageSize=300&'+K()+(tok?'&pageToken='+encodeURIComponent(tok):''));if(!r.ok)throw new Error(r.status);var j=await r.json();(j.documents||[]).forEach(function(d){try{out.push(fromDoc(d))}catch(e){}});tok=j.nextPageToken||''}while(tok);return out}
+async function dbGet(id){var r=await fetch(API+'/'+encodeURIComponent(id)+'?'+K());if(!r.ok)throw new Error(r.status);return fromDoc(await r.json())}
+async function dbSet(l,create){var r=await fetch(API+'/'+encodeURIComponent(l.c)+'?'+K()+(create?'&currentDocument.exists=false':''),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields:{j:{stringValue:JSON.stringify(l)}}})});if(!r.ok){var e=new Error(r.status);e.status=r.status;throw e}}
+async function dbDel(id){var r=await fetch(API+'/'+encodeURIComponent(id)+'?'+K(),{method:'DELETE'});if(!r.ok)throw new Error(r.status)}
+function setStat(ok){$('#stat').innerHTML=!ON?'💾 Modo local: los lotes solo se guardan en este dispositivo':ok?'🟢 Conectado: lotes compartidos y sincronizados':'🔴 Sin conexión con la base de datos'}
+
+var lots=[],cur=null,editing=null;
+async function refresh(){
+  if(ON){try{lots=await dbList();setStat(true)}catch(e){setStat(false)}}else{lots=sget('lots',[]);setStat(true)}
+  lots.sort(function(a,b){return (b.ts||0)-(a.ts||0)});renderList();names();
+}
+async function persist(l,create){
+  if(ON){await dbSet(l,create);return}
+  var i=lots.findIndex(function(x){return x.c===l.c});if(i<0)lots.push(l);else lots[i]=l;sset('lots',lots);
+}
+function names(){var s={};lots.forEach(function(l){['r','pm','ps','pc','tu'].forEach(function(k){if(l[k])s[l[k]]=1})});var y=$('#yo').value.trim();if(y)s[y]=1;$('#nombres').innerHTML=Object.keys(s).sort().map(function(n){return '<option value="'+esc(n)+'">'}).join('')}
+
 function baseUrl(){return (sget('base','')||location.href.split('#')[0]).trim().split('#')[0]}
 var LIM=140;
 function lite(l){if(!$('#lite').checked)return l;var o={};for(var k in l)o[k]=(/^(p|n|d|to)$/.test(k)&&typeof l[k]==='string'&&l[k].length>LIM)?l[k].slice(0,LIM)+'…':l[k];return o}
-function urlFor(l){return baseUrl()+pack(lite(l))}
+function urlFor(l){return baseUrl()+(ON?'#id='+encodeURIComponent(l.c||'x'):pack(lite(l)))}
 function qrSvg(t){var q;try{q=qrcode(0,'M');q.addData(t);q.make()}catch(e){q=qrcode(0,'L');q.addData(t);q.make()}return q.createSvgTag({cellSize:4,margin:0,scalable:true})}
 function exval(){var e=$('#explante').value;return /^Otro/.test(e)&&$('#exotro').value.trim()?'Otro: '+$('#exotro').value.trim():e}
-function form(){return {s:$('#especie').value.trim(),o:$('#origen').value,d:$('#odet').value.trim(),e:exval(),f:$('#fecha').value,p:$('#proc').value.trim(),m:$('#medio').value.trim(),i:$('#incub').value.trim(),n:$('#notas').value.trim(),t:$('#estado').value,td:today,to:$('#eobs').value.trim()}}
-function meter(){var n=urlFor(form()).length,t,c;if(n<400){t='Cómodo';c='var(--ok)'}else if(n<1000){t='Denso: imprime el QR de al menos 3 cm';c='var(--warn)'}else if(n<2300){t='Muy denso: usa etiqueta de 4 cm o más';c='var(--bad)'}else{t='Demasiado largo para el QR: acorta algún texto';c='var(--bad)'}
-$('#meter').innerHTML='Tamaño del QR: <span style="color:'+c+'">'+t+'</span> ('+n+' caracteres)'}
+function v(i){return $('#'+i).value.trim()}
+function form(){return {s:v('especie'),o:$('#origen').value,d:v('odet'),e:exval(),f:$('#fecha').value,p:v('proc'),m:v('medio'),i:v('incub'),n:v('notas'),t:$('#estado').value,td:today,to:v('eobs'),r:v('yo'),pm:v('pm'),ps:v('ps'),pc:v('pc')}}
+function meter(){
+  $('#liteBox').classList.toggle('hide',ON);if(ON)return;
+  var n=urlFor(form()).length,t,c;if(n<400){t='Cómodo';c='var(--ok)'}else if(n<1000){t='Denso: imprime el QR de al menos 3 cm';c='var(--warn)'}else if(n<2300){t='Muy denso: usa etiqueta de 4 cm o más';c='var(--bad)'}else{t='Demasiado largo para el QR: acorta algún texto';c='var(--bad)'}
+  $('#meter').innerHTML='Tamaño del QR: <span style="color:'+c+'">'+t+'</span> ('+n+' caracteres)'}
 ['input','change'].forEach(function(ev){$('#p1').addEventListener(ev,meter)});
 $('#explante').onchange=function(){$('#exotro').classList.toggle('hide',!/^Otro/.test(this.value))};
+$('#yo').value=sget('yo','');$('#yo').onchange=function(){sset('yo',this.value.trim());names()};
 
 function showLabel(l){
   cur=l;$('#lcode').textContent=l.c;
   try{$('#lqr').innerHTML=qrSvg(urlFor(l))}catch(e){$('#lqr').textContent='Texto demasiado largo para el QR. Acorta algún texto.'}
-  $('#lsum').textContent=l.e+' · siembra '+fmt(l.f)+' · '+(l.t||'En evaluación');
+  $('#lsum').textContent=l.e+' · siembra '+fmt(l.f)+' · '+(l.t||'En evaluación')+(l.ps?' · sembró '+l.ps:'');
   $('#ustado').value=l.t||ES[0];$('#udate').value=today;$('#uobs').value=l.to||'';
+  $('#updn').textContent=ON?'El QR no cambia: quien lo escanee verá siempre el estado actualizado.':'Los QR ya impresos siguen mostrando el estado de cuando se generaron.';
   $('#label').classList.remove('hide');$('#label').scrollIntoView({behavior:'smooth'});
 }
 function renderList(){
-  $('#cnt').textContent=lots.length;$('#empty').style.display=lots.length?'none':'block';
-  $('#list').innerHTML=lots.slice().reverse().map(function(l){return '<div class="lot" data-c="'+esc(l.c)+'"><div><b>'+esc(l.c)+'</b><small>'+esc(l.e)+' · '+esc(fmt(l.f))+'</small><span class="badge '+sc(l.t)+'">'+esc(l.t||'En evaluación')+'</span></div><span>›</span></div>'}).join('');
+  var q=$('#q').value.trim().toLowerCase(),fe=$('#fe').value;
+  var vis=lots.filter(function(l){if(fe&&l.t!==fe)return false;if(!q)return true;return [l.c,l.s,l.e,l.o,l.r,l.pm,l.ps,l.pc,l.t].join(' ').toLowerCase().indexOf(q)>=0});
+  $('#cnt').textContent=lots.length;$('#empty').style.display=vis.length?'none':'block';$('#empty').textContent=lots.length?'Ningún lote coincide con la búsqueda.':'Aún no hay lotes registrados.';
+  $('#list').innerHTML=vis.map(function(l){return '<div class="lot" data-c="'+esc(l.c)+'"><div><b>'+esc(l.c)+'</b><small>'+esc(l.e)+' · '+esc(fmt(l.f))+(l.s?' · '+esc(l.s):'')+'</small><small>'+(l.ps?'Sembró: '+esc(l.ps)+' · ':'')+'Registró: '+esc(l.r||'—')+'</small><span class="badge '+sc(l.t)+'">'+esc(l.t||'En evaluación')+'</span></div><span>›</span></div>'}).join('');
   Array.prototype.forEach.call(document.querySelectorAll('.lot'),function(el){el.onclick=function(){var l=lots.filter(function(x){return x.c===el.dataset.c})[0];if(l)showLabel(l)}});
 }
+$('#q').oninput=renderList;$('#fe').onchange=renderList;
 function tab(n){$('#p1').classList.toggle('hide',n!==1);$('#p2').classList.toggle('hide',n!==2);$('#t1').classList.toggle('on',n===1);$('#t2').classList.toggle('on',n===2)}
-$('#t1').onclick=function(){tab(1)};$('#t2').onclick=function(){tab(2)};
+$('#t1').onclick=function(){tab(1)};$('#t2').onclick=function(){tab(2);refresh()};
 $('#fecha').value=today;$('#base').value=sget('base','');
 $('#base').onchange=function(){sset('base',this.value.trim());meter()};
-$('#save').onclick=function(){
-  var l=form();if(!l.f){alert('Indica la fecha de siembra.');return}
-  if(!l.p||!l.m){alert('Completa el procedimiento y el medio.');return}
-  if(urlFor(l).length>=2300){alert('El texto es demasiado largo para caber en un QR. Acorta procedimiento, notas u observaciones.');return}
-  if(editing){l.c=editing.c;l.td=(editing.t===l.t)?(editing.td||today):today;lots[lots.indexOf(editing)]=l}
-  else{var mx=0;lots.forEach(function(x){var k=+(x.c.split('-')[2]||0);if(k>mx)mx=k});l.c='LOT-'+l.f.replace(/-/g,'').slice(2)+'-'+String(mx+1).padStart(3,'0');lots.push(l)}
-  sset('lots',lots);renderList();showLabel(l);stopEdit();
-};
-$('#upd').onclick=function(){if(!cur)return;cur.t=$('#ustado').value;cur.td=$('#udate').value||today;cur.to=$('#uobs').value.trim();
-  if(urlFor(cur).length>=2300){alert('El texto es demasiado largo para el QR.');return}
-  sset('lots',lots);renderList();showLabel(cur)};
-$('#print').onclick=function(){window.print()};
-var editing=null;
-function clearForm(){['especie','odet','proc','medio','incub','notas','eobs','exotro'].forEach(function(i){$('#'+i).value=''});$('#estado').value=ES[0];$('#origen').selectedIndex=0;$('#explante').selectedIndex=0;$('#exotro').classList.add('hide');$('#fecha').value=today;meter()}
+
+function clearForm(){['especie','odet','proc','medio','incub','notas','eobs','exotro','pm','ps','pc'].forEach(function(i){$('#'+i).value=''});$('#estado').value=ES[0];$('#origen').selectedIndex=0;$('#explante').selectedIndex=0;$('#exotro').classList.add('hide');$('#fecha').value=today;meter()}
 function stopEdit(){editing=null;clearForm();$('#save').textContent='Registrar lote y generar QR';$('#cancel').classList.add('hide')}
-function startEdit(l){editing=l;tab(1);$('#especie').value=l.s||'';$('#origen').value=l.o||OR[0];$('#odet').value=l.d||'';var e=l.e||'';if(/^Otro: /.test(e)){$('#explante').value='Otro (especificar)';$('#exotro').value=e.slice(6);$('#exotro').classList.remove('hide')}else{$('#explante').value=e;$('#exotro').classList.add('hide')}$('#fecha').value=l.f||today;$('#proc').value=l.p||'';$('#medio').value=l.m||'';$('#incub').value=l.i||'';$('#notas').value=l.n||'';$('#estado').value=l.t||ES[0];$('#eobs').value=l.to||'';$('#save').textContent='Guardar cambios y generar nuevo QR';$('#cancel').classList.remove('hide');meter();window.scrollTo(0,0)}
+function startEdit(l){editing=l;tab(1);$('#especie').value=l.s||'';$('#origen').value=l.o||OR[0];$('#odet').value=l.d||'';var e=l.e||'';if(/^Otro: /.test(e)){$('#explante').value='Otro (especificar)';$('#exotro').value=e.slice(6);$('#exotro').classList.remove('hide')}else{$('#explante').value=e;$('#exotro').classList.add('hide')}$('#fecha').value=l.f||today;$('#proc').value=l.p||'';$('#medio').value=l.m||'';$('#incub').value=l.i||'';$('#notas').value=l.n||'';$('#estado').value=l.t||ES[0];$('#eobs').value=l.to||'';$('#pm').value=l.pm||'';$('#ps').value=l.ps||'';$('#pc').value=l.pc||'';$('#save').textContent='Guardar cambios';$('#cancel').classList.remove('hide');meter();window.scrollTo(0,0)}
 $('#cancel').onclick=stopEdit;
 $('#edit').onclick=function(){if(cur)startEdit(cur)};
-$('#del').onclick=function(){if(!cur||!confirm('¿Eliminar el lote '+cur.c+'? Esta acción no se puede deshacer.'))return;lots=lots.filter(function(x){return x!==cur});sset('lots',lots);cur=null;$('#label').classList.add('hide');renderList();tab(2)};
-$('#lite').checked=sget('lite',true);$('#lite').onchange=function(){sset('lite',this.checked);meter()};
-renderList();meter();
 
-var m=location.hash.match(/^#[lz]=(.+)$/);
-if(m){try{
-  var l=unpack(location.hash);$('#app').classList.add('hide');$('#view').classList.remove('hide');
+$('#save').onclick=async function(){
+  var l=form();if(!l.r){alert('Escribe tu nombre arriba antes de registrar.');return}
+  if(!l.f){alert('Indica la fecha de siembra.');return}
+  if(!l.p||!l.m){alert('Completa el procedimiento y el medio.');return}
+  if(!ON&&urlFor(l).length>=2300){alert('El texto es demasiado largo para caber en un QR. Acorta algún texto o conecta la base de datos.');return}
+  var b=$('#save');b.disabled=true;
+  try{
+    if(editing){l.c=editing.c;l.ts=editing.ts;l.r=editing.r||l.r;l.td=(editing.t===l.t)?(editing.td||today):today;if(editing.t!==l.t)l.tu=l.r;else if(editing.tu)l.tu=editing.tu;await persist(l,false)}
+    else{
+      await refresh();var base='LOT-'+l.f.replace(/-/g,'').slice(2)+'-',mx=0;
+      lots.forEach(function(x){if(x.c.indexOf(base)===0){var k=+x.c.slice(base.length);if(k>mx)mx=k}});
+      l.ts=Date.now();
+      for(var t=1;t<=8;t++){l.c=base+String(mx+t).padStart(3,'0');try{await persist(l,true);break}catch(e){if(!ON||t===8)throw e}}
+    }
+    await refresh();showLabel(l);stopEdit();
+  }catch(e){alert('No se pudo guardar. Revisa tu conexión e inténtalo de nuevo.')}
+  b.disabled=false;
+};
+$('#upd').onclick=async function(){if(!cur)return;
+  cur.t=$('#ustado').value;cur.td=$('#udate').value||today;cur.to=v('uobs');cur.tu=v('yo');
+  try{await persist(cur,false);await refresh();showLabel(cur)}catch(e){alert('No se pudo guardar el estado.')}};
+$('#del').onclick=async function(){if(!cur||!confirm('¿Eliminar el lote '+cur.c+'? Se borrará para todas las personas y no se puede deshacer.'))return;
+  try{if(ON)await dbDel(cur.c);else{lots=lots.filter(function(x){return x.c!==cur.c});sset('lots',lots)}cur=null;$('#label').classList.add('hide');await refresh();tab(2)}catch(e){alert('No se pudo eliminar.')}};
+$('#print').onclick=function(){window.print()};
+$('#lite').checked=sget('lite',true);$('#lite').onchange=function(){sset('lite',this.checked);meter()};
+refresh();meter();
+setInterval(function(){if(ON&&!document.hidden&&!$('#app').classList.contains('hide')&&!$('#p1').querySelector(':focus'))refresh()},60000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&ON&&!$('#app').classList.contains('hide'))refresh()});
+
+// ---- Vista pública (al escanear el QR) ----
+function renderView(l){
   $('#vcode').textContent=l.c;var d=dias(l.f);
-  var rows=[['Especie / variedad',l.s],['Origen del material',l.o],['Tipo de explante',l.e],['Fecha de siembra',fmt(l.f)],['Tiempo en cultivo',d===null?'':d+' días'],['Medio de cultivo',l.m],['Incubación',l.i]];
+  var rows=[['Especie / variedad',l.s],['Origen del material',l.o],['Tipo de explante',l.e],['Fecha de siembra',fmt(l.f)],['Tiempo en cultivo',d===null?'':d+' días'],['Medio de cultivo',l.m],['Incubación',l.i],['Registrado por',l.r],['Medio preparado por',l.pm],['Sembrado por',l.ps],['Operador en cámara',l.pc]];
   var h=rows.filter(function(r){return r[1]}).map(function(r){return '<div class="row"><span>'+esc(r[0])+'</span><span>'+esc(r[1])+'</span></div>'}).join('');
-  if(l.t)h+='<div class="row"><span>Estado</span><span><span class="badge '+sc(l.t)+'">'+esc(l.t)+'</span>'+(l.td?'<br><small class="note">'+esc(fmt(l.td))+'</small>':'')+'</span></div>';
+  if(l.t)h+='<div class="row"><span>Estado</span><span><span class="badge '+sc(l.t)+'">'+esc(l.t)+'</span>'+(l.td?'<br><small class="note">'+esc(fmt(l.td))+(l.tu?' · '+esc(l.tu):'')+'</small>':'')+'</span></div>';
   [['Observaciones del estado',l.to],['Detalle del origen',l.d],['Procedimiento',l.p],['Notas',l.n]].forEach(function(r){if(r[1])h+='<div class="blk"><b>'+esc(r[0])+'</b><p>'+esc(r[1])+'</p></div>'});
   $('#vbody').innerHTML=h;
+}
+var hs=location.hash,mm=hs.match(/^#(id|z|l)=(.+)$/);
+if(mm){
+  $('#app').classList.add('hide');$('#view').classList.remove('hide');
   $('#toApp').onclick=function(){location.hash='';location.reload()};
-}catch(e){}}
+  if(mm[1]==='id'){var id=decodeURIComponent(mm[2]);$('#vcode').textContent=id;
+    if(!ON)$('#vbody').textContent='Este sitio aún no está conectado a la base de datos.';
+    else dbGet(id).then(renderView).catch(function(){$('#vbody').textContent='No se encontró este lote. Pudo haber sido eliminado.'})}
+  else{try{renderView(unpack(hs))}catch(e){$('#vbody').textContent='Código no válido.'}}
+}
 </script>
 </body>
 </html>

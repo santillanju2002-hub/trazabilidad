@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trazabilidad In Vitro</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<style>
+:root{--bg:#f3f8f1;--card:#fff;--ink:#15301d;--mut:#5d7766;--acc:#2f8f4e;--acc2:#1f6b38;--line:#d6e5d9;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1a13;--card:#17251c;--ink:#e6f2e9;--mut:#9ab5a1;--acc:#4fbf72;--acc2:#7fd99a;--line:#2a3f31}}
+:root[data-theme="dark"]{--bg:#0f1a13;--card:#17251c;--ink:#e6f2e9;--mut:#9ab5a1;--acc:#4fbf72;--acc2:#7fd99a;--line:#2a3f31}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.45}
+.w{max-width:560px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:8px 0 2px}.sub{color:var(--mut);margin:0 0 14px;font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+label{display:block;font-size:13px;font-weight:600;margin:10px 0 4px}
+input,select,textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit}
+textarea{min-height:64px;resize:vertical}
+button{font:inherit;border:0;border-radius:12px;padding:12px 16px;background:var(--acc);color:#fff;font-weight:600;cursor:pointer;width:100%;margin-top:14px}
+button.sec{background:transparent;color:var(--acc2);border:1px solid var(--line)}
+.tabs{display:flex;gap:8px;margin-bottom:12px}.tabs button{margin:0;background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.tabs button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.lot{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.lot:last-child{border:0}.lot b{color:var(--acc2)}.lot small{color:var(--mut);display:block}
+.qr{width:220px;max-width:70%;margin:10px auto;background:#fff;padding:8px;border-radius:10px}.qr svg{width:100%;height:auto;display:block}
+.code{text-align:center;font-weight:700;font-size:18px;letter-spacing:.5px}
+.row{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:15px}
+.row span:first-child{color:var(--mut)}.row span:last-child{text-align:right}
+.badge{display:inline-block;background:var(--acc);color:#fff;border-radius:99px;padding:3px 10px;font-size:12px;font-weight:600}
+.hide{display:none}.note{font-size:12px;color:var(--mut)}
+@media print{body *{visibility:hidden}#label,#label *{visibility:visible}#label{position:absolute;left:0;top:0;width:100%;border:0}#label button{display:none}}
+</style>
+</head>
+<body>
+<div class="w">
+<!-- VISTA PÚBLICA (al escanear el QR) -->
+<div id="view" class="hide">
+  <span class="badge">🌱 Trazabilidad in vitro</span>
+  <h1 id="vcode"></h1><p class="sub">Información del lote</p>
+  <div class="card" id="vbody"></div>
+  <button class="sec" id="toApp">Registrar mis propios lotes</button>
+</div>
+
+<!-- APLICACIÓN -->
+<div id="app">
+  <h1>🌱 Trazabilidad In Vitro</h1><p class="sub">Registra lotes y genera su código QR.</p>
+  <div class="tabs"><button id="t1" class="on">Nuevo lote</button><button id="t2">Mis lotes (<span id="cnt">0</span>)</button></div>
+
+  <div id="p1" class="card">
+    <label>Tipo de explante</label>
+    <select id="explante"><option>Yema axilar</option><option>Ápice meristemático</option><option>Segmento nodal</option><option>Hoja</option><option>Callo</option><option>Semilla</option><option>Embrión</option><option>Otro</option></select>
+    <label>Fecha de siembra</label><input type="date" id="fecha">
+    <label>Procedimiento</label><textarea id="proc" maxlength="200" placeholder="Ej.: desinfección con NaClO 1% por 10 min, 3 enjuagues con agua estéril"></textarea>
+    <label>Medio de cultivo</label><input id="medio" maxlength="80" placeholder="Ej.: MS + 1 mg/L BAP, pH 5.8">
+    <label>Notas (opcional)</label><textarea id="notas" maxlength="150"></textarea>
+    <button id="save">Registrar lote y generar QR</button>
+  </div>
+
+  <div id="p2" class="card hide"><div id="list"></div><p class="note" id="empty">Aún no hay lotes registrados.</p></div>
+
+  <div id="label" class="card hide">
+    <div class="code" id="lcode"></div>
+    <div class="qr" id="lqr"></div>
+    <div class="note" style="text-align:center" id="lsum"></div>
+    <button id="print">🖨️ Imprimir etiqueta</button>
+  </div>
+
+  <div class="card">
+    <label>Enlace del sitio (el que abrirá el QR)</label>
+    <input id="base" placeholder="Pega aquí el enlace público de tu sitio">
+    <p class="note">Pégalo una vez que publiques el sitio. Los QR nuevos usarán este enlace.</p>
+  </div>
+</div>
+</div>
+
+<script>
+var $=function(s){return document.querySelector(s)};
+var mem={};
+function sget(k,d){try{var v=localStorage.getItem(k);return v===null?(k in mem?mem[k]:d):JSON.parse(v)}catch(e){return k in mem?mem[k]:d}}
+function sset(k,v){mem[k]=v;try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function esc(s){var d=document.createElement('div');d.textContent=s==null?'':String(s);return d.innerHTML}
+function enc(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+function dec(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return JSON.parse(decodeURIComponent(escape(atob(s))))}
+function fmt(d){var p=(d||'').split('-');if(p.length!==3)return d||'—';var m=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];return +p[2]+' de '+m[+p[1]-1]+' de '+p[0]}
+function dias(d){var t=new Date(d+'T00:00:00');if(isNaN(t))return null;return Math.max(0,Math.floor((Date.now()-t.getTime())/864e5))}
+
+var lots=sget('lots',[]);
+function baseUrl(){var b=sget('base','');return (b||location.href.split('#')[0]).trim()}
+function urlFor(l){return baseUrl().split('#')[0]+'#l='+enc({c:l.c,e:l.e,f:l.f,p:l.p,m:l.m,n:l.n})}
+function qrSvg(text){var q=qrcode(0,'M');q.addData(text);q.make();return q.createSvgTag({cellSize:4,margin:0,scalable:true})}
+
+function showLabel(l){
+  $('#lcode').textContent=l.c;
+  try{$('#lqr').innerHTML=qrSvg(urlFor(l))}catch(e){$('#lqr').textContent='Texto demasiado largo para el QR. Acorta procedimiento o notas.'}
+  $('#lsum').textContent=l.e+' · siembra '+fmt(l.f);
+  $('#label').classList.remove('hide');$('#label').scrollIntoView({behavior:'smooth'});
+}
+function renderList(){
+  $('#cnt').textContent=lots.length;$('#empty').style.display=lots.length?'none':'block';
+  var h='';lots.slice().reverse().forEach(function(l){h+='<div class="lot" data-c="'+esc(l.c)+'"><div><b>'+esc(l.c)+'</b><small>'+esc(l.e)+' · '+esc(fmt(l.f))+'</small></div><span>›</span></div>'});
+  $('#list').innerHTML=h;
+  Array.prototype.forEach.call(document.querySelectorAll('.lot'),function(el){el.onclick=function(){var l=lots.filter(function(x){return x.c===el.dataset.c})[0];if(l)showLabel(l)}});
+}
+function tab(n){$('#p1').classList.toggle('hide',n!==1);$('#p2').classList.toggle('hide',n!==2);$('#t1').classList.toggle('on',n===1);$('#t2').classList.toggle('on',n===2)}
+$('#t1').onclick=function(){tab(1)};$('#t2').onclick=function(){tab(2)};
+$('#fecha').value=new Date().toISOString().slice(0,10);
+$('#base').value=sget('base','');
+$('#base').onchange=function(){sset('base',this.value.trim())};
+$('#save').onclick=function(){
+  var f=$('#fecha').value;if(!f){alert('Indica la fecha de siembra.');return}
+  if(!$('#medio').value.trim()||!$('#proc').value.trim()){alert('Completa el procedimiento y el medio.');return}
+  var n=String(lots.length+1).padStart(3,'0');
+  var l={c:'LOT-'+f.replace(/-/g,'').slice(2)+'-'+n,e:$('#explante').value,f:f,p:$('#proc').value.trim(),m:$('#medio').value.trim(),n:$('#notas').value.trim()};
+  lots.push(l);sset('lots',lots);renderList();showLabel(l);
+  $('#proc').value='';$('#medio').value='';$('#notas').value='';
+};
+$('#print').onclick=function(){window.print()};
+renderList();
+
+// Vista pública
+var m=location.hash.match(/^#l=(.+)$/);
+if(m){try{
+  var l=dec(m[1]);$('#app').classList.add('hide');$('#view').classList.remove('hide');
+  $('#vcode').textContent=l.c;var d=dias(l.f);
+  var rows=[['Tipo de explante',l.e],['Fecha de siembra',fmt(l.f)],['Tiempo en cultivo',d===null?'—':d+' días'],['Medio de cultivo',l.m],['Procedimiento',l.p]];
+  if(l.n)rows.push(['Notas',l.n]);
+  $('#vbody').innerHTML=rows.map(function(r){return '<div class="row"><span>'+esc(r[0])+'</span><span>'+esc(r[1])+'</span></div>'}).join('');
+  $('#toApp').onclick=function(){location.hash='';location.reload()};
+}catch(e){}}
+</script>
+</body>
+</html>

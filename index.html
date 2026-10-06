@@ -2,21 +2,21 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<meta name="color-scheme" content="light">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Trazabilidad In Vitro</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
 <style>
-:root{--bg:#f3f8f1;--card:#fff;--ink:#15301d;--mut:#5d7766;--acc:#2f8f4e;--acc2:#1f6b38;--line:#d6e5d9;--ok:#2f8f4e;--bad:#c2372d;--warn:#c98a10;--info:#3b7fb8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1a13;--card:#17251c;--ink:#e6f2e9;--mut:#9ab5a1;--acc:#4fbf72;--acc2:#7fd99a;--line:#2a3f31}}
+:root{--bg:#ffffff;--inp:#f4f8f4;--card:#ffffff;color-scheme:light;--ink:#15301d;--mut:#5d7766;--acc:#2f8f4e;--acc2:#1f6b38;--line:#d6e5d9;--ok:#2f8f4e;--bad:#c2372d;--warn:#c98a10;--info:#3b7fb8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5;overflow-wrap:anywhere}
 .w{max-width:620px;margin:0 auto;padding:16px}
-h1{font-size:22px;margin:8px 0 2px}h2{font-size:15px;margin:18px 0 0;color:var(--acc2);border-bottom:1px solid var(--line);padding-bottom:4px}
+h1{font-size:22px;margin:8px 0 2px;color:var(--acc2)}h2{font-size:15px;margin:18px 0 0;color:var(--acc2);border-bottom:1px solid var(--line);padding-bottom:4px}
 .sub{color:var(--mut);margin:0 0 10px;font-size:14px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 1px 6px rgba(20,60,30,.08)}
 label{display:block;font-size:13px;font-weight:600;margin:12px 0 4px}
-input,select,textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit}
+input,select,textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:var(--inp);color:var(--ink);font:inherit}
 textarea{min-height:90px;resize:vertical}
 button{font:inherit;border:0;border-radius:12px;padding:12px 16px;background:var(--acc);color:#fff;font-weight:600;cursor:pointer;width:100%;margin-top:14px}
 button:disabled{opacity:.6}button.sec{background:transparent;color:var(--acc2);border:1px solid var(--line)}
@@ -39,6 +39,8 @@ button.dng{background:transparent;color:var(--bad);border:1px solid var(--bad)}
 #sheet .pl{display:flex;gap:8px;align-items:center;border:1px dashed #888;padding:6px;margin:3px;color:#000;background:#fff;font-size:11px;line-height:1.35;break-inside:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 #sheet .pq{width:84px;flex:none}#sheet .pq svg{width:100%;height:auto;display:block}
 @media print{body.ps .w{display:none!important}body.ps #sheet,body.ps #sheet *{visibility:visible}body.ps #sheet.grid{display:flex;flex-wrap:wrap;position:absolute;left:0;top:0;width:100%}body.ps #sheet.grid .pl{width:48%}body.ps #sheet.one{display:block}body.ps #sheet.one .pl{page-break-after:always;border:0;font-size:15px;margin:0}body.ps #sheet.one .pq{width:150px}}
+#tb button{margin:6px 0 0;flex:1;padding:10px 8px;font-size:14px}
+.lot .ck{width:22px;height:22px;padding:0;margin:0;flex:none;accent-color:var(--acc)}
 </style>
 </head>
 <body>
@@ -53,6 +55,7 @@ button.dng{background:transparent;color:var(--bad);border:1px solid var(--bad)}
 <div id="app">
   <h1>🌱 Trazabilidad In Vitro</h1>
   <div id="stat"></div>
+  <button class="sec" id="rf" style="margin:0 0 10px;padding:8px 14px;font-size:13px;width:auto">↻ Actualizar lista</button>
   <div class="card"><label style="margin-top:0">Tu nombre (se guarda en este dispositivo)</label><input id="yo" placeholder="Ej.: Juan Santillán" list="nombres"></div>
   <datalist id="nombres"></datalist>
   <div class="tabs"><button id="t1" class="on">Nuevo lote</button><button id="t2">Lotes (<span id="cnt">0</span>)</button></div>
@@ -98,6 +101,7 @@ button.dng{background:transparent;color:var(--bad);border:1px solid var(--bad)}
 
   <div id="p2" class="card hide">
     <div class="flt"><input id="q" placeholder="Buscar por código, persona, especie…"><select id="fe" style="max-width:48%"></select></div>
+    <div class="flt" id="tb"><button class="sec" id="selAll"></button><button class="dng" id="delSel"></button></div>
     <div id="list"></div><p class="note" id="empty">Aún no hay lotes registrados.</p>
   </div>
 
@@ -168,16 +172,16 @@ var today=new Date().toISOString().slice(0,10);
 // ---- Base de datos (Firebase Firestore por REST) o modo local ----
 function K(){return 'key='+FB.apiKey}
 function fromDoc(d){return JSON.parse(d.fields.j.stringValue)}
-async function dbList(){var out=[],tok='';do{var r=await fetch(API+'?pageSize=300&'+K()+(tok?'&pageToken='+encodeURIComponent(tok):''));if(!r.ok)throw new Error(r.status);var j=await r.json();(j.documents||[]).forEach(function(d){try{out.push(fromDoc(d))}catch(e){}});tok=j.nextPageToken||''}while(tok);return out}
-async function dbGet(id){var r=await fetch(API+'/'+encodeURIComponent(id)+'?'+K());if(!r.ok)throw new Error(r.status);return fromDoc(await r.json())}
+async function dbList(){var out=[],tok='';do{var r=await fetch(API+'?pageSize=300&'+K()+(tok?'&pageToken='+encodeURIComponent(tok):''),{cache:'no-store'});if(!r.ok)throw new Error(r.status);var j=await r.json();(j.documents||[]).forEach(function(d){try{out.push(fromDoc(d))}catch(e){}});tok=j.nextPageToken||''}while(tok);return out}
+async function dbGet(id){var r=await fetch(API+'/'+encodeURIComponent(id)+'?'+K(),{cache:'no-store'});if(!r.ok)throw new Error(r.status);return fromDoc(await r.json())}
 async function dbSet(l,create){var r=await fetch(API+'/'+encodeURIComponent(l.c)+'?'+K()+(create?'&currentDocument.exists=false':''),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields:{j:{stringValue:JSON.stringify(l)}}})});if(!r.ok){var e=new Error(r.status);e.status=r.status;throw e}}
 async function dbDel(id){var r=await fetch(API+'/'+encodeURIComponent(id)+'?'+K(),{method:'DELETE'});if(!r.ok)throw new Error(r.status)}
-function setStat(ok){$('#stat').innerHTML=!ON?'💾 Modo local: los lotes solo se guardan en este dispositivo':ok?'🟢 Conectado: lotes compartidos y sincronizados':'🔴 Sin conexión con la base de datos'}
+function setStat(ok,code){$('#stat').innerHTML=!ON?'💾 Modo local: los lotes solo se guardan en este dispositivo':ok?'🟢 Conectado: lotes compartidos y sincronizados':'🔴 No se pudo leer la base de datos'+(code=='429'?' (se agotó el límite diario de lecturas gratuitas; se restablece solo en unas horas)':code?' (error '+esc(code)+')':'')}
 
 var lots=[],cur=null,editing=null;
-async function refresh(){
-  if(ON){try{lots=await dbList();setStat(true)}catch(e){setStat(false)}}else{lots=sget('lots',[]);setStat(true)}
-  lots.sort(function(a,b){return (b.ts||0)-(a.ts||0)});renderList();names();fillOrigin();prev();
+async function refresh(){var ok=true;
+  if(ON){try{lots=await dbList();setStat(true)}catch(e){ok=false;setStat(false,e.message)}}else{lots=sget('lots',[]);setStat(true)}
+  lots.sort(function(a,b){return (b.ts||0)-(a.ts||0)});renderList();names();fillOrigin();prev();return ok
 }
 async function persist(l,create){
   if(ON){await dbSet(l,create);return}
@@ -199,6 +203,14 @@ function autofill(){
   n.textContent='✨ Rellené los datos con tu último lote de «'+e+'» ('+p.c+'). Cambia lo que necesites.';meter();
 }
 $('#etapa').onchange=autofill;
+var sel={},VIS=[];
+function bar(){var n=Object.keys(sel).length;$('#delSel').textContent='🗑️ Eliminar seleccionados ('+n+')';$('#delSel').disabled=!n;var all=VIS.length&&VIS.every(function(l){return sel[l.c]});$('#selAll').textContent=all?'Quitar selección':'Seleccionar todos'}
+$('#selAll').onclick=function(){var all=VIS.length&&VIS.every(function(l){return sel[l.c]});VIS.forEach(function(l){if(all)delete sel[l.c];else sel[l.c]=1});renderList()};
+$('#delSel').onclick=async function(){var ids=Object.keys(sel);if(!ids.length)return;if(!confirm('¿Eliminar '+ids.length+' frasco(s) seleccionado(s)? Se borran para todas las personas y no se puede deshacer.'))return;
+  $('#delSel').disabled=true;
+  try{if(ON){for(var i=0;i<ids.length;i+=15)await Promise.all(ids.slice(i,i+15).map(function(id){return dbDel(id)}))}lots=lots.filter(function(x){return !sel[x.c]});if(!ON)sset('lots',lots);
+    if(cur&&sel[cur.c]){cur=null;$('#label').classList.add('hide')}sel={};await refresh()}
+  catch(e){alert('No se pudieron eliminar todos. Revisa la lista e inténtalo de nuevo.');await refresh()}};
 function baseUrl(){return (sget('base','')||location.href.split('#')[0]).trim().split('#')[0]}
 var LIM=140;
 function lite(l){if(!$('#lite').checked)return l;var o={};for(var k in l)o[k]=(/^(p|n|d|to)$/.test(k)&&typeof l[k]==='string'&&l[k].length>LIM)?l[k].slice(0,LIM)+'…':l[k];return o}
@@ -239,9 +251,10 @@ function showLabel(l){
 function renderList(){
   var q=$('#q').value.trim().toLowerCase(),fe=$('#fe').value,CM=cmap();
   var vis=lots.filter(function(l){if(fe&&l.t!==fe)return false;if(!q)return true;return [l.c,l.s,l.e,l.o,l.r,l.pm,l.ps,l.pc,l.t].join(' ').toLowerCase().indexOf(q)>=0});
-  $('#cnt').textContent=lots.length;$('#empty').style.display=vis.length?'none':'block';$('#empty').textContent=lots.length?'Ningún lote coincide con la búsqueda.':'Aún no hay lotes registrados.';
-  $('#list').innerHTML=vis.map(function(l){return '<div class="lot" data-c="'+esc(l.c)+'"><div><b style="color:'+colorOf(l,CM)+'">'+esc(l.c+(l.nf?' de '+l.nf:''))+'</b><small>'+esc(l.e)+' · '+esc(fmt(l.f))+(l.s?' · '+esc(l.s):'')+'</small><small>'+(l.ps?'Sembró: '+esc(l.ps)+' · ':'')+'Registró: '+esc(l.r||'—')+'</small>'+((l.et||l.nf)?'<small>'+esc(l.et||'')+(l.nf?(l.et?' · ':'')+esc(l.nf)+' × '+esc(l.rc||'recipientes')+(l.vm?' · '+esc(l.vm)+' ml':''):'')+'</small>':'')+'<span class="badge '+sc(l.t)+'">'+esc(l.t||'En evaluación')+'</span></div><span>›</span></div>'}).join('');
+  VIS=vis;Object.keys(sel).forEach(function(k){if(!lots.some(function(x){return x.c===k}))delete sel[k]});$('#cnt').textContent=lots.length;$('#empty').style.display=vis.length?'none':'block';$('#empty').textContent=lots.length?'Ningún lote coincide con la búsqueda.':'Aún no hay lotes registrados.';
+  $('#list').innerHTML=vis.map(function(l){return '<div class="lot" data-c="'+esc(l.c)+'"><input type="checkbox" class="ck"'+(sel[l.c]?' checked':'')+'><div style="flex:1"><b style="color:'+colorOf(l,CM)+'">'+esc(l.c+(l.nf?' de '+l.nf:''))+'</b><small>'+esc(l.e)+' · '+esc(fmt(l.f))+(l.s?' · '+esc(l.s):'')+'</small><small>'+(l.ps?'Sembró: '+esc(l.ps)+' · ':'')+'Registró: '+esc(l.r||'—')+'</small>'+((l.et||l.nf)?'<small>'+esc(l.et||'')+(l.nf?(l.et?' · ':'')+esc(l.nf)+' × '+esc(l.rc||'recipientes')+(l.vm?' · '+esc(l.vm)+' ml':''):'')+'</small>':'')+'<span class="badge '+sc(l.t)+'">'+esc(l.t||'En evaluación')+'</span></div><span>›</span></div>'}).join('');
   Array.prototype.forEach.call(document.querySelectorAll('.lot'),function(el){el.onclick=function(){var l=lots.filter(function(x){return x.c===el.dataset.c})[0];if(l)showLabel(l)}});
+  Array.prototype.forEach.call(document.querySelectorAll('.lot .ck'),function(c){c.onclick=function(e){e.stopPropagation();var k=c.closest('.lot').dataset.c;if(c.checked)sel[k]=1;else delete sel[k];bar()}});bar();
 }
 $('#q').oninput=renderList;$('#fe').onchange=renderList;
 function tab(n){$('#p1').classList.toggle('hide',n!==1);$('#p2').classList.toggle('hide',n!==2);$('#t1').classList.toggle('on',n===1);$('#t2').classList.toggle('on',n===2)}
@@ -266,7 +279,8 @@ $('#save').onclick=async function(){
   try{
     if(editing){l.c=editing.c;l.ts=editing.ts;if(editing.cl)l.cl=editing.cl;l.r=editing.r||l.r;l.td=(editing.t===l.t)?(editing.td||today):today;if(editing.t!==l.t)l.tu=l.r;else if(editing.tu)l.tu=editing.tu;if(editing.fn){l.fn=editing.fn;l.bt=editing.bt}l.nf=editing.nf||l.nf;var bt=batchOf(editing);if($('#eall').checked&&bt.length>1){var keep=['c','ts','cl','fn','bt','t','td','to','tu','r','nf'];await Promise.all(bt.filter(function(x){return x.c!==editing.c}).map(function(x){var o=Object.assign({},l);keep.forEach(function(k){if(x[k]!==undefined)o[k]=x[k];else delete o[k]});return persist(o,false)}))}await persist(l,false)}
     else{
-      await refresh();var base=(slug(l.r)||'LOT')+'-',mx=0;
+      if(ON&&!(await refresh())){alert('No se pudo leer la lista actual de lotes, así que no registré nada para evitar números equivocados. Revisa el aviso rojo de arriba e inténtalo de nuevo.');b.disabled=false;return}
+      var base=(slug(l.r)||'LOT')+'-',mx=0;
       lots.forEach(function(x){if(x.c.indexOf(base)===0){var k=+x.c.slice(base.length);if(k>mx)mx=k}});
       l.cl=pick(l.r);var nn=Math.max(1,parseInt(l.nf)||1),recs=[],first=base+pd(mx+1);
       for(var i=1;i<=nn;i++){var o=Object.assign({},l);o.c=base+pd(mx+i);o.ts=Date.now()+i;if(nn>1){o.fn=i;o.bt=first}recs.push(o)}
@@ -280,9 +294,9 @@ $('#upd').onclick=async function(){if(!cur)return;
   cur.t=$('#ustado').value;cur.td=$('#udate').value||today;cur.to=v('uobs');cur.tu=nm(v('yo'));
   try{await persist(cur,false);await refresh();showLabel(cur)}catch(e){alert('No se pudo guardar el estado.')}};
 $('#del').onclick=async function(){if(!cur||!confirm('¿Eliminar el lote '+cur.c+'? Se borrará para todas las personas y no se puede deshacer.'))return;
-  try{if(ON)await dbDel(cur.c);else{lots=lots.filter(function(x){return x.c!==cur.c});sset('lots',lots)}cur=null;$('#label').classList.add('hide');await refresh();tab(2)}catch(e){alert('No se pudo eliminar.')}};
+  try{var dc=cur.c;if(ON)await dbDel(dc);lots=lots.filter(function(x){return x.c!==dc});if(!ON)sset('lots',lots);cur=null;$('#label').classList.add('hide');await refresh();tab(2)}catch(e){alert('No se pudo eliminar.')}};
 $('#delAll').onclick=async function(){if(!cur)return;var b=batchOf(cur);if(!confirm('¿Eliminar los '+b.length+' frascos ('+b[0].c+' a '+b[b.length-1].c+')? Se borran para todas las personas y no se puede deshacer.'))return;
-  try{if(ON)await Promise.all(b.map(function(x){return dbDel(x.c)}));else{var ids=b.map(function(x){return x.c});lots=lots.filter(function(x){return ids.indexOf(x.c)<0});sset('lots',lots)}cur=null;$('#label').classList.add('hide');await refresh();tab(2)}catch(e){alert('No se pudo eliminar.')}};
+  try{var ids=b.map(function(x){return x.c});if(ON)await Promise.all(b.map(function(x){return dbDel(x.c)}));lots=lots.filter(function(x){return ids.indexOf(x.c)<0});if(!ON)sset('lots',lots);cur=null;$('#label').classList.add('hide');await refresh();tab(2)}catch(e){alert('No se pudo eliminar.')}};
 $('#print').onclick=function(){document.body.classList.remove('ps');window.print()};
 function printSheet(mode){
   if(!cur)return;var b=batchOf(cur),h='',m=cmap();
@@ -293,6 +307,7 @@ function printSheet(mode){
 $('#pgrid').onclick=function(){printSheet('grid')};$('#pone').onclick=function(){printSheet('one')};
 window.onafterprint=function(){document.body.classList.remove('ps')};
 $('#lite').checked=sget('lite',true);$('#lite').onchange=function(){sset('lite',this.checked);meter()};
+$('#rf').onclick=async function(){this.disabled=true;await refresh();this.disabled=false};
 refresh();meter();
 setInterval(function(){if(ON&&!document.hidden&&!$('#app').classList.contains('hide')&&!$('#p2').classList.contains('hide'))refresh()},120000);
 document.addEventListener('visibilitychange',function(){if(!document.hidden&&ON&&!$('#app').classList.contains('hide'))refresh()});

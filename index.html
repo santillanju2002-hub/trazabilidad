@@ -32,7 +32,7 @@ button.dng{background:transparent;color:var(--bad);border:1px solid var(--bad)}
 .blk{padding:10px 0;border-bottom:1px solid var(--line)}.blk b{display:block;color:var(--mut);font-size:13px;font-weight:600;margin-bottom:3px}.blk p{margin:0;white-space:pre-wrap;font-size:15px}
 .badge{display:inline-block;color:#fff;border-radius:99px;padding:3px 11px;font-size:12px;font-weight:600;background:var(--acc)}
 .ok{background:var(--ok)}.bad{background:var(--bad)}.warn{background:var(--warn)}.info{background:var(--info)}
-.hide{display:none}.note{font-size:12px;color:var(--mut)}#stat{font-size:13px;font-weight:600;margin-bottom:10px}
+.hide{display:none!important}.note{font-size:12px;color:var(--mut)}#stat{font-size:13px;font-weight:600;margin-bottom:10px}
 .flt{display:flex;gap:8px;margin-bottom:6px}
 @media print{body *{visibility:hidden}#label,#label *{visibility:visible}#label .np,#label .np *{display:none!important}#label{position:absolute;left:0;top:0;width:100%;border:0}#label .qr{width:70%;max-width:none}}
 #sheet{display:none}
@@ -49,6 +49,12 @@ button.dng{background:transparent;color:var(--bad);border:1px solid var(--bad)}
 .bt{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
 .bh{display:flex;gap:10px;align-items:center;padding:10px 12px;cursor:pointer;background:var(--inp)}
 .bh small{display:block;color:var(--mut)}.bl{padding:0 12px}
+.pb{display:inline-block;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:700;margin-left:6px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.pbar{height:10px;background:var(--inp);border-radius:5px;overflow:hidden;margin:8px 0 4px;border:1px solid var(--line)}.pbar div{height:100%}
+.al{margin-top:6px;padding:7px 10px;border-radius:8px;font-size:13px;font-weight:600}.al.warn{background:#FEF3C7;color:#92400E}.al.bad{background:#FEE2E2;color:#991B1B}
+.band{display:flex;justify-content:space-between;gap:8px;padding:8px 12px;border-radius:10px;font-weight:700;font-size:15px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.alp{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px;background:#FFFBEB}.arow{display:flex;gap:8px;align-items:center;padding:6px 0;font-size:14px;border-top:1px solid var(--line)}.arow .pb{margin:0}
+#leg{margin-bottom:10px;font-size:14px}#leg summary{cursor:pointer;font-weight:600;color:var(--acc2)}.legr{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.legr .pb{margin:0}
 </style>
 </head>
 <body>
@@ -68,9 +74,13 @@ button.dng{background:transparent;color:var(--bad);border:1px solid var(--bad)}
   <div class="tabs"><button id="t1" class="on">Nuevo lote</button><button id="t2">Lotes (<span id="cnt">0</span>)</button></div>
 
   <div id="p1" class="card">
-    <h2 style="margin-top:0">1. Etapa o procedimiento</h2>
+    <h2 style="margin-top:0">1. Etapa, fase y plazo</h2>
     <label>¿Qué vas a hacer?</label><select id="etapa"></select>
     <div class="note" id="afn"></div>
+    <label>Fase del cultivo</label><select id="fase"></select>
+    <div id="fnote" style="font-size:13px;margin:6px 0"></div>
+    <div class="flt"><div style="flex:1"><label>Duración de esta fase</label><input type="number" min="1" id="fq" value="4" inputmode="numeric"></div><div style="flex:1"><label>Unidad</label><select id="fut"><option value="mes">Meses</option><option value="sem">Semanas</option><option value="dia">Días</option></select></div></div>
+    <label>Avisarme cuántos días antes del cambio de medio</label><input type="number" min="0" id="fa" value="7" inputmode="numeric">
     <label>Experimento (opcional)</label><input id="ex" list="exps" placeholder="Ej.: Efecto de la BAP en la multiplicación">
     <datalist id="exps"></datalist>
     <label>Tratamiento o nombre de este lote (opcional)</label><input id="tr" placeholder="Ej.: Control (MS solo)  /  MS + 1 mg/L BAP">
@@ -114,6 +124,8 @@ button.dng{background:transparent;color:var(--bad);border:1px solid var(--bad)}
   </div>
 
   <div id="p2" class="card hide">
+    <div id="alerts"></div>
+    <details id="leg"></details>
     <div id="who" class="chips"></div>
     <div id="newbar" class="hide"><button id="newExp">➕ Nuevo lote o experimento</button></div>
     <div class="flt" style="margin-top:10px"><input id="q" placeholder="Buscar por código, persona, especie…"><select id="fe" style="max-width:48%"></select></div>
@@ -122,10 +134,13 @@ button.dng{background:transparent;color:var(--bad);border:1px solid var(--bad)}
   </div>
 
   <div id="label" class="card hide">
+    <div id="lband" class="band hide"></div>
     <div class="code" id="lcode"></div>
     <div class="qr" id="lqr"></div>
     <div class="note" style="text-align:center" id="lsum"></div>
     <button id="print" class="np">🖨️ Imprimir esta etiqueta</button>
+    <button id="nextF" class="np hide"></button>
+    <button id="cal" class="sec np hide">📅 Agregar recordatorio al calendario</button>
     <div id="prAll" class="np hide"><button id="pgrid" class="sec"></button><button id="pone" class="sec"></button></div>
     <button id="edit" class="sec np">✏️ Editar lote</button>
     <button id="del" class="dng np">🗑️ Eliminar este frasco / lote</button>
@@ -237,6 +252,35 @@ $('#delSel').onclick=async function(){var ids=Object.keys(sel);if(!ids.length)re
   try{if(ON){for(var i=0;i<ids.length;i+=15)await Promise.all(ids.slice(i,i+15).map(function(id){return dbDel(id)}))}lots=lots.filter(function(x){return !sel[x.c]});if(!ON)sset('lots',lots);
     if(cur&&sel[cur.c]){cur=null;$('#label').classList.add('hide')}sel={};await refresh()}
   catch(e){alert('No se pudieron eliminar todos. Revisa la lista e inténtalo de nuevo.');await refresh()}};
+var PH=[{n:'Azul',c:'#1D4ED8',f:'#fff'},{n:'Verde',c:'#16A34A',f:'#fff'},{n:'Naranja',c:'#F97316',f:'#111'},{n:'Rojo',c:'#DC2626',f:'#fff'},{n:'Morado',c:'#9333EA',f:'#fff'},{n:'Rosa',c:'#DB2777',f:'#fff'},{n:'Turquesa',c:'#0891B2',f:'#fff'},{n:'Amarillo',c:'#FACC15',f:'#111'},{n:'Café',c:'#92400E',f:'#fff'},{n:'Gris',c:'#4B5563',f:'#fff'}];
+var fromBatch=null;
+function ph(n){return PH[(+n||0)%PH.length]}
+function addD(s,q,u){var d=new Date(s+'T00:00:00');if(isNaN(d))return null;q=+q||0;if(u==='mes')d.setMonth(d.getMonth()+q);else d.setDate(d.getDate()+(u==='sem'?7*q:q));return d}
+function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function plan(l){if(!(+l.fq)||!l.fut)return null;var s=l.fi||l.f,e=addD(s,l.fq,l.fut);if(!e||!s)return null;var a=new Date(s+'T00:00:00'),n=new Date(today+'T00:00:00'),tot=Math.round((e-a)/864e5),el=Math.round((n-a)/864e5);return {s:s,e:iso(e),tot:tot,el:Math.max(0,el),left:tot-el,aviso:+l.fa||7,pct:Math.min(100,Math.max(0,Math.round(100*el/tot)))}}
+function actv(l){return !/Contaminado|Descartado|Transferido/.test(l.t||'')}
+function alertHtml(l){var p=plan(l);if(!p||!actv(l))return '';var n=(+l.fs||0)+1;if(p.left<0)return '<div class="al bad">Vencido hace '+(-p.left)+' días: cambia al medio de la fase '+n+'</div>';if(p.left<=p.aviso)return '<div class="al warn">Faltan '+p.left+' días: prepara el medio de la fase '+n+'</div>';return ''}
+function pb(l){return l.fq?'<span class="pb" style="background:'+ph(l.fs).c+';color:'+ph(l.fs).f+'">Fase '+(+l.fs||0)+' · '+ph(l.fs).n+'</span>':''}
+function barHtml(l){var p=plan(l);if(!p)return '';return '<div class="pbar"><div style="width:'+p.pct+'%;background:'+ph(l.fs).c+'"></div></div><small>Día '+p.el+' de '+p.tot+' · cambio de medio el '+esc(fmt(p.e))+(actv(l)&&p.left>=0?' · faltan '+p.left+' días':'')+'</small>'+alertHtml(l)}
+function viewBand(l){var p=plan(l);if(!l.fq||!p)return '';var c=ph(l.fs);return '<div class="band" style="background:'+c.c+';color:'+c.f+'"><span>Fase '+(+l.fs||0)+' · '+c.n+'</span><span>Cambio: '+esc(fmt(p.e))+'</span></div>'+barHtml(l)}
+function showBand(l){var b=$('#lband'),p=plan(l),c=ph(l.fs),mine=slug(l.r||'')===slug(nm(v('yo')));
+  if(l.fq&&p){b.classList.remove('hide');b.style.background=c.c;b.style.color=c.f;b.innerHTML='<span>Fase '+(+l.fs||0)+' · '+c.n+'</span><span>Cambio: '+esc(fmt(p.e))+'</span>'}else b.classList.add('hide');
+  $('#nextF').classList.toggle('hide',!(actv(l)&&mine));$('#nextF').textContent='➡️ Pasar a la fase '+((+l.fs||0)+1)+' · '+ph((+l.fs||0)+1).n;$('#cal').classList.toggle('hide',!(p&&actv(l)))}
+function fnote(){var n=+$('#fase').value||0,p=ph(n),q=+v('fq'),s=$('#fecha').value,t='<span class="pb" style="margin:0;background:'+p.c+';color:'+p.f+'">Fase '+n+' · '+p.n+'</span>';if(q&&s){var d=addD(s,q,$('#fut').value);if(d)t+=' termina el '+fmt(iso(d))+' (aviso '+(v('fa')||7)+' días antes)'}$('#fnote').innerHTML=t}
+function tpl(){var f=+$('#fase').value;$('#fq').value=4;$('#fut').value=f===0?'mes':'sem';meter()}
+$('#fase').innerHTML=Array.apply(null,Array(20)).map(function(_,i){return '<option value="'+i+'">Fase '+i+' · '+ph(i).n+'</option>'}).join('');
+$('#fase').onchange=tpl;
+$('#leg').innerHTML='<summary>Leyenda de colores por fase</summary><div class="legr">'+PH.map(function(p,i){return '<span class="pb" style="background:'+p.c+';color:'+p.f+'">Fase '+i+' · '+p.n+'</span>'}).join('')+'</div><p class="note">Plantilla: la fase 0 dura 4 meses y las siguientes 4 semanas; puedes cambiarlo en cada lote. Desde la fase 10 los colores se repiten.</p>';
+function startNext(l){
+  if(editing)stopEdit();tab(1);clearForm();fillFrom(l);fillOrigin();var f=(+l.fs||0)+1;
+  $('#etapa').value='Repique / subcultivo';$('#lo').value=l.c;$('#pa').value=(+l.pa||1)+1;$('#fase').value=String(f);tpl();
+  $('#fecha').value=today;$('#fobs').value=today;$('#tr').value=l.tr||'';$('#ex').value=l.ex||'';$('#medio').value='';
+  $('#nf').value=batchOf(l).filter(actv).length||'';fromBatch=batchOf(l);
+  $('#afn').textContent='Pasando a la fase '+f+' desde '+dc(l)+'. Escribe el medio nuevo y revisa la cantidad de frascos. Al guardar, los frascos activos del lote anterior quedarán como «Transferido a nuevo medio».';
+  meter();window.scrollTo(0,0);$('#medio').focus()}
+$('#nextF').onclick=function(){if(cur)startNext(cur)};
+$('#cal').onclick=function(){var p=cur&&plan(cur);if(!p)return;var d=addD(p.e,-p.aviso,'dia'),e=new Date(d.getTime()+864e5),k=function(x){return iso(x).replace(/-/g,'')};
+  window.open('https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent('Preparar medio · '+dc(cur)+' (fase '+((+cur.fs||0)+1)+')')+'&dates='+k(d)+'/'+k(e)+'&details='+encodeURIComponent('Cambio de medio el '+fmt(p.e)+(cur.tr?' · '+cur.tr:'')+(cur.ex?' · Experimento: '+cur.ex:'')),'_blank')};
 function baseUrl(){return (sget('base','')||location.href.split('#')[0]).trim().split('#')[0]}
 var LIM=140;
 function lite(l){if(!$('#lite').checked)return l;var o={};for(var k in l)o[k]=(/^(p|n|d|to)$/.test(k)&&typeof l[k]==='string'&&l[k].length>LIM)?l[k].slice(0,LIM)+'…':l[k];return o}
@@ -258,9 +302,9 @@ function batchOf(l){return l.bt?lots.filter(function(x){return x.bt===l.bt}).sor
 function prev(){var e=$('#prev');if(!e)return;if(editing){e.textContent='Editando '+dc(editing);return}var r=nm(v('yo'));if(!r){e.textContent='';return}var n=Math.max(1,parseInt(v('nf'))||1),b=slug(r)||'LOT',t=(n>1?b+'-001 a '+b+'-'+pd(n)+' (cada uno "de '+n+'", con su propio QR)':b+'-001')+' · Lote '+nextBn(r);e.innerHTML='Se registrará como: <b style="font-size:16px;color:'+pick(r)+'">'+esc(t)+'</b>'}
 function nm(s){return (s||'').trim().replace(/\s+/g,' ').toLowerCase().replace(/(^|\s)\S/g,function(c){return c.toUpperCase()})}
 function slug(s){return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,'-').replace(/^-|-$/g,'')}
-function form(){return {s:v('especie'),o:$('#origen').value,d:v('odet'),e:exval(),f:$('#fecha').value,p:v('proc'),m:v('medio'),i:v('incub'),n:v('notas'),t:$('#estado').value,td:$('#fobs').value||today,fpm:$('#fpm').value,fcam:$('#fcam').value,to:v('eobs'),r:nm(v('yo')),pm:nm(v('pm')),ps:nm(v('ps')),pc:nm(v('pc')),et:$('#etapa').value,lo:$('#lo').value,pa:v('pa'),rc:$('#rec').value,nf:v('nf'),vm:v('vm'),ex:v('ex'),tr:v('tr')}}
+function form(){return {s:v('especie'),o:$('#origen').value,d:v('odet'),e:exval(),f:$('#fecha').value,p:v('proc'),m:v('medio'),i:v('incub'),n:v('notas'),t:$('#estado').value,td:$('#fobs').value||today,fpm:$('#fpm').value,fcam:$('#fcam').value,to:v('eobs'),r:nm(v('yo')),pm:nm(v('pm')),ps:nm(v('ps')),pc:nm(v('pc')),et:$('#etapa').value,lo:$('#lo').value,pa:v('pa'),rc:$('#rec').value,nf:v('nf'),vm:v('vm'),ex:v('ex'),tr:v('tr'),fs:$('#fase').value,fq:v('fq'),fut:$('#fut').value,fa:v('fa'),fi:$('#fecha').value}}
 function meter(){
-  tot();dn();prev();$('#liteBox').classList.toggle('hide',ON);if(ON)return;
+  tot();dn();fnote();prev();$('#liteBox').classList.toggle('hide',ON);if(ON)return;
   var n=urlFor(form()).length,t,c;if(n<400){t='Cómodo';c='var(--ok)'}else if(n<1000){t='Denso: imprime el QR de al menos 3 cm';c='var(--warn)'}else if(n<2300){t='Muy denso: usa etiqueta de 4 cm o más';c='var(--bad)'}else{t='Demasiado largo para el QR: acorta algún texto';c='var(--bad)'}
   $('#meter').innerHTML='Tamaño del QR: <span style="color:'+c+'">'+t+'</span> ('+n+' caracteres)'}
 ['input','change'].forEach(function(ev){$('#p1').addEventListener(ev,meter)});
@@ -268,7 +312,7 @@ $('#explante').onchange=function(){$('#exotro').classList.toggle('hide',!/^Otro/
 $('#yo').value=nm(sget('yo',''));$('#yo').onchange=function(){this.value=nm(this.value);sset('yo',this.value);who=null;names();exps();fillOrigin();prev();autofill();renderList()};
 
 function showLabel(l){
-  cur=l;$('#lcode').textContent=dc(l);$('#lcode').style.color=colorOf(l,cmap());
+  cur=l;showBand(l);$('#lcode').textContent=dc(l);$('#lcode').style.color=colorOf(l,cmap());
   try{$('#lqr').innerHTML=qrSvg(urlFor(l))}catch(e){$('#lqr').textContent='Texto demasiado largo para el QR. Acorta algún texto.'}
   $('#lsum').textContent=(l.ex?'Experimento: '+l.ex+' · ':'')+(l.tr?l.tr+' · ':'')+(l.bn?'Lote '+l.bn+' · ':'')+(l.et?l.et+' · ':'')+(l.nf&&l.rc?l.nf+' × '+l.rc.toLowerCase()+(l.vm?' de '+l.vm+' ml':'')+' · ':'')+l.e+' · siembra '+fmt(l.f)+' · '+(l.t||'En evaluación')+(l.ps?' · sembró '+l.ps:'');
   var bb=batchOf(l);$('#prAll').classList.toggle('hide',bb.length<2);$('#delAll').classList.toggle('hide',bb.length<2);$('#pgrid').textContent='🖨️ Las '+bb.length+' etiquetas en una hoja';$('#pone').textContent='🖨️ '+bb.length+' etiquetas, una por página';$('#delAll').textContent='🗑️ Eliminar los '+bb.length+' frascos del lote';
@@ -291,6 +335,9 @@ function renderList(){
   VIS=vis;Object.keys(sel).forEach(function(k){if(!lots.some(function(x){return x.c===k}))delete sel[k]});
   var mine=!!who&&who===me;$('#newbar').classList.toggle('hide',!mine);
   $('#cnt').textContent=lots.length;$('#empty').style.display=vis.length?'none':'block';$('#empty').textContent=lots.length?'Ningún lote coincide con la búsqueda.':'Aún no hay lotes registrados.';
+  var AL=[],seen={};base.forEach(function(l){var bk=l.bt||l.c;if(seen[bk])return;seen[bk]=1;var fr=base.filter(function(x){return (x.bt||x.c)===bk});if(!fr.some(actv))return;var f0=fr.sort(function(a,b){return (a.fn||0)-(b.fn||0)})[0],p=plan(f0);if(p&&p.left<=p.aviso)AL.push({l:f0,p:p})});
+  AL.sort(function(a,b){return a.p.left-b.p.left});
+  $('#alerts').innerHTML=AL.length?'<div class="alp"><b>Próximos cambios de fase ('+AL.length+')</b>'+AL.slice(0,8).map(function(a){var c=ph(a.l.fs);return '<div class="arow"><span class="pb" style="background:'+c.c+';color:'+c.f+'">Fase '+(+a.l.fs||0)+'</span><span style="flex:1">'+esc(nm(a.l.r))+' · '+(a.l.bn?'Lote '+a.l.bn:esc(dc(a.l)))+(a.l.tr?' · '+esc(a.l.tr):'')+'</span><b style="color:'+(a.p.left<0?'#B91C1C':'#B45309')+'">'+(a.p.left<0?'Vencido hace '+(-a.p.left)+' d':'En '+a.p.left+' d')+'</b></div>'}).join('')+'</div>':'';
   var G={},eo=[],h='';BAT={};
   vis.forEach(function(l){var k=slug(l.r||'')+'|'+(l.ex||'');if(!G[k]){G[k]={n:l.ex||'',r:nm(l.r||''),b:{},o:[],t:0};eo.push(k)}var g=G[k],bk=l.bt||l.c;if(!g.b[bk]){g.b[bk]=[];g.o.push(bk)}g.b[bk].push(l);g.t++});
   eo.forEach(function(k){var g=G[k];
@@ -298,7 +345,7 @@ function renderList(){
     g.o.forEach(function(bk){var fr=g.b[bk].sort(function(a,b){return (a.fn||0)-(b.fn||0)});BAT[bk]=fr;var f0=fr[0],cnt={};
       fr.forEach(function(l){var t=l.t||'En evaluación';cnt[t]=(cnt[t]||0)+1});
       var open=OPEN[bk]||q||fe,all=fr.every(function(l){return sel[l.c]});
-      h+='<div class="bt"><div class="bh" data-bk="'+esc(bk)+'"><input type="checkbox" class="ck"'+(all?' checked':'')+'><div style="flex:1"><b style="color:'+colorOf(f0,CM)+'">'+(f0.bn?'Lote '+f0.bn:'Frasco')+(f0.tr?' · '+esc(f0.tr):'')+'</b><small>'+esc(f0.et||'')+' · '+esc(f0.e)+' · '+esc(fmt(f0.f))+' · '+fr.length+(fr.length>1?' frascos':' frasco')+'</small>'+(f0.m?'<small>Medio: '+esc(f0.m.slice(0,70))+'</small>':'')+'<div>'+Object.keys(cnt).map(function(t){return '<span class="badge '+sc(t)+'">'+cnt[t]+' · '+esc(t)+'</span> '}).join('')+'</div></div><span>'+(open?'▾':'›')+'</span></div><div class="bl'+(open?'':' hide')+'">'+fr.map(function(l){return '<div class="lot" data-c="'+esc(l.c)+'"><input type="checkbox" class="ck"'+(sel[l.c]?' checked':'')+'><div style="flex:1"><b style="color:'+colorOf(l,CM)+'">'+esc(dc(l))+'</b><small>'+esc(l.e)+(l.s?' · '+esc(l.s):'')+'</small><small>'+(l.ps?'Sembró: '+esc(l.ps)+' · ':'')+'Registró: '+esc(l.r||'—')+'</small><span class="badge '+sc(l.t)+'">'+esc(l.t||'En evaluación')+'</span></div><span>›</span></div>'}).join('')+'</div></div>'});h+='</div>'});
+      h+='<div class="bt"><div class="bh" data-bk="'+esc(bk)+'"><input type="checkbox" class="ck"'+(all?' checked':'')+'><div style="flex:1"><b style="color:'+colorOf(f0,CM)+'">'+(f0.bn?'Lote '+f0.bn:'Frasco')+(f0.tr?' · '+esc(f0.tr):'')+'</b>'+pb(f0)+'<small>'+esc(f0.et||'')+' · '+esc(f0.e)+' · '+esc(fmt(f0.f))+' · '+fr.length+(fr.length>1?' frascos':' frasco')+'</small>'+(f0.m?'<small>Medio: '+esc(f0.m.slice(0,70))+'</small>':'')+'<div>'+Object.keys(cnt).map(function(t){return '<span class="badge '+sc(t)+'">'+cnt[t]+' · '+esc(t)+'</span> '}).join('')+'</div>'+barHtml(f0)+'</div><span>'+(open?'▾':'›')+'</span></div><div class="bl'+(open?'':' hide')+'">'+fr.map(function(l){return '<div class="lot" data-c="'+esc(l.c)+'"><input type="checkbox" class="ck"'+(sel[l.c]?' checked':'')+'><div style="flex:1"><b style="color:'+colorOf(l,CM)+'">'+esc(dc(l))+'</b><small>'+esc(l.e)+(l.s?' · '+esc(l.s):'')+'</small><small>'+(l.ps?'Sembró: '+esc(l.ps)+' · ':'')+'Registró: '+esc(l.r||'—')+'</small><span class="badge '+sc(l.t)+'">'+esc(l.t||'En evaluación')+'</span></div><span>›</span></div>'}).join('')+'</div></div>'});h+='</div>'});
   $('#list').innerHTML=h;
   Array.prototype.forEach.call(document.querySelectorAll('.bh'),function(el){el.onclick=function(){var k=el.dataset.bk;OPEN[k]=!OPEN[k];renderList()}});
   Array.prototype.forEach.call(document.querySelectorAll('.bh .ck'),function(c){c.onclick=function(e){e.stopPropagation();var fr=BAT[c.closest('.bh').dataset.bk]||[],all=fr.every(function(l){return sel[l.c]});fr.forEach(function(l){if(all)delete sel[l.c];else sel[l.c]=1});renderList()}});
@@ -315,9 +362,9 @@ $('#t1').onclick=function(){tab(1)};$('#t2').onclick=function(){tab(2);refresh()
 $('#fecha').value=today;$('#fobs').value=today;$('#base').value=sget('base','');
 $('#base').onchange=function(){sset('base',this.value.trim());meter()};
 
-function clearForm(){['especie','odet','proc','medio','incub','notas','eobs','exotro','pm','ps','pc','ex','tr'].forEach(function(i){$('#'+i).value=''});$('#estado').value=ES[0];$('#origen').selectedIndex=0;$('#explante').selectedIndex=0;$('#etapa').selectedIndex=0;$('#rec').selectedIndex=0;$('#nf').value='';$('#vm').value='';$('#pa').value=1;$('#lo').value='';$('#afn').textContent='';$('#exotro').classList.add('hide');$('#fecha').value=today;$('#fobs').value=today;$('#fpm').value='';$('#fcam').value='';meter()}
+function clearForm(){['especie','odet','proc','medio','incub','notas','eobs','exotro','pm','ps','pc','ex','tr'].forEach(function(i){$('#'+i).value=''});$('#estado').value=ES[0];$('#origen').selectedIndex=0;$('#explante').selectedIndex=0;$('#etapa').selectedIndex=0;$('#rec').selectedIndex=0;$('#nf').value='';$('#vm').value='';$('#pa').value=1;$('#lo').value='';$('#afn').textContent='';$('#exotro').classList.add('hide');$('#fecha').value=today;$('#fobs').value=today;$('#fpm').value='';$('#fcam').value='';$('#fase').value='0';$('#fq').value=4;$('#fut').value='mes';$('#fa').value=7;fromBatch=null;meter()}
 function stopEdit(){editing=null;$('#nf').disabled=false;$('#eallw').classList.add('hide');clearForm();$('#save').textContent='Registrar lote y generar QR';$('#cancel').classList.add('hide')}
-function startEdit(l){editing=l;tab(1);$('#eallw').classList.toggle('hide',batchOf(l).length<2);$('#eall').checked=false;$('#nf').disabled=true;$('#especie').value=l.s||'';$('#origen').value=l.o||OR[0];$('#odet').value=l.d||'';setEx(l.e);$('#fecha').value=l.f||today;$('#proc').value=l.p||'';$('#medio').value=l.m||'';$('#incub').value=l.i||'';$('#notas').value=l.n||'';$('#estado').value=l.t||ES[0];$('#eobs').value=l.to||'';$('#pm').value=l.pm||'';$('#ps').value=l.ps||'';$('#pc').value=l.pc||'';$('#ex').value=l.ex||'';$('#tr').value=l.tr||'';$('#fobs').value=l.td||today;$('#fpm').value=l.fpm||'';$('#fcam').value=l.fcam||'';fillOrigin();$('#etapa').value=l.et||'';$('#lo').value=l.lo||'';$('#pa').value=l.pa||1;$('#rec').value=l.rc||RC[0];$('#nf').value=l.nf||'';$('#vm').value=l.vm||'';$('#save').textContent='Guardar cambios';$('#cancel').classList.remove('hide');meter();window.scrollTo(0,0)}
+function startEdit(l){editing=l;tab(1);$('#eallw').classList.toggle('hide',batchOf(l).length<2);$('#eall').checked=false;$('#nf').disabled=true;$('#especie').value=l.s||'';$('#origen').value=l.o||OR[0];$('#odet').value=l.d||'';setEx(l.e);$('#fecha').value=l.f||today;$('#proc').value=l.p||'';$('#medio').value=l.m||'';$('#incub').value=l.i||'';$('#notas').value=l.n||'';$('#estado').value=l.t||ES[0];$('#eobs').value=l.to||'';$('#pm').value=l.pm||'';$('#ps').value=l.ps||'';$('#pc').value=l.pc||'';$('#ex').value=l.ex||'';$('#tr').value=l.tr||'';$('#fobs').value=l.td||today;$('#fpm').value=l.fpm||'';$('#fcam').value=l.fcam||'';$('#fase').value=String(+l.fs||0);$('#fq').value=l.fq||'';$('#fut').value=l.fut||'mes';$('#fa').value=l.fa||7;fillOrigin();$('#etapa').value=l.et||'';$('#lo').value=l.lo||'';$('#pa').value=l.pa||1;$('#rec').value=l.rc||RC[0];$('#nf').value=l.nf||'';$('#vm').value=l.vm||'';$('#save').textContent='Guardar cambios';$('#cancel').classList.remove('hide');meter();window.scrollTo(0,0)}
 $('#cancel').onclick=stopEdit;
 $('#edit').onclick=function(){if(cur)startEdit(cur)};
 
@@ -331,7 +378,7 @@ $('#save').onclick=async function(){
   var b=$('#save');b.disabled=true;
   try{
     fixLod(l);
-    if(editing){l.c=editing.c;l.ts=editing.ts;if(editing.cl)l.cl=editing.cl;l.r=editing.r||l.r;l.td=l.td||today;if(editing.t!==l.t)l.tu=l.r;else if(editing.tu)l.tu=editing.tu;if(editing.fn){l.fn=editing.fn;l.bt=editing.bt;l.bn=editing.bn}l.nf=editing.nf||l.nf;var bt=batchOf(editing);if($('#eall').checked&&bt.length>1){var keep=['c','ts','cl','fn','bt','t','td','to','tu','r','nf'];await Promise.all(bt.filter(function(x){return x.c!==editing.c}).map(function(x){var o=Object.assign({},l);keep.forEach(function(k){if(x[k]!==undefined)o[k]=x[k];else delete o[k]});return persist(o,false)}))}await persist(l,false)}
+    if(editing){l.c=editing.c;l.ts=editing.ts;if(editing.cl)l.cl=editing.cl;l.r=editing.r||l.r;l.td=l.td||today;if(editing.t!==l.t)l.tu=l.r;else if(editing.tu)l.tu=editing.tu;if(editing.fn){l.fn=editing.fn;l.bt=editing.bt;l.bn=editing.bn}l.nf=editing.nf||l.nf;l.fi=(editing.fi&&editing.fi!==editing.f)?editing.fi:l.f;var bt=batchOf(editing);if($('#eall').checked&&bt.length>1){var keep=['c','ts','cl','fn','bt','t','td','to','tu','r','nf'];await Promise.all(bt.filter(function(x){return x.c!==editing.c}).map(function(x){var o=Object.assign({},l);keep.forEach(function(k){if(x[k]!==undefined)o[k]=x[k];else delete o[k]});return persist(o,false)}))}await persist(l,false)}
     else{
       if(ON&&!(await refresh())){alert('No se pudo leer la lista actual de lotes, así que no registré nada para evitar números equivocados. Revisa el aviso rojo de arriba e inténtalo de nuevo.');b.disabled=false;return}
       var base=(slug(l.r)||'LOT'),bn=nextBn(l.r);
@@ -339,6 +386,7 @@ $('#save').onclick=async function(){
       for(var i=1;i<=nn;i++){var o=Object.assign({},l);o.c=base+'-L'+bn+'-'+pd(i);o.ts=Date.now()+i;o.fn=i;o.bt=first;o.bn=bn;recs.push(o)}
       await Promise.all(recs.map(function(o){return persist(o,true)}));l=recs[0];
     }
+    if(!editing&&fromBatch&&fromBatch.some(function(x){return x.c===l.lo})){await Promise.all(fromBatch.filter(actv).map(function(x){x.t='Transferido a nuevo medio';x.td=today;x.tu=l.r;return persist(x,false)}))}
     OX=slug(l.r||'')+'|'+(l.ex||'');if(l.bt)OPEN[l.bt]=true;await refresh();showLabel(l);stopEdit();
   }catch(e){alert('No se pudo guardar. Revisa tu conexión e inténtalo de nuevo.')}
   b.disabled=false;
@@ -353,7 +401,7 @@ $('#delAll').onclick=async function(){if(!cur)return;var b=batchOf(cur);if(!conf
 $('#print').onclick=function(){document.body.classList.remove('ps');window.print()};
 function printSheet(mode){
   if(!cur)return;var b=batchOf(cur),h='',m=cmap();
-  try{b.forEach(function(x){h+='<div class="pl"><div class="pq">'+qrSvg(urlFor(x))+'</div><div class="pt"><b style="color:'+colorOf(x,m)+'">'+esc(dc(x))+'</b><br>'+(x.tr?esc(x.tr)+'<br>':'')+(x.bn?'Lote '+x.bn+' · ':'')+esc(x.et||'')+'<br>'+esc(x.e)+' · '+esc(fmt(x.f))+'</div></div>'})}catch(e){alert('No se pudo generar el QR.');return}
+  try{b.forEach(function(x){h+='<div class="pl" style="border-top:16px solid '+(x.fq?ph(x.fs).c:'#999')+'"><div class="pq">'+qrSvg(urlFor(x))+'</div><div class="pt"><b style="color:'+colorOf(x,m)+'">'+esc(dc(x))+'</b><br>'+((x.fq&&plan(x))?'<b>Fase '+(+x.fs||0)+' · '+ph(x.fs).n+'</b> · cambio '+esc(fmt(plan(x).e))+'<br>':'')+(x.tr?esc(x.tr)+'<br>':'')+(x.bn?'Lote '+x.bn+' · ':'')+esc(x.et||'')+'<br>'+esc(x.e)+' · '+esc(fmt(x.f))+'</div></div>'})}catch(e){alert('No se pudo generar el QR.');return}
   var sh=$('#sheet');sh.className=mode;sh.innerHTML=h;document.body.classList.add('ps');
   setTimeout(function(){window.print()},150);
 }
@@ -368,12 +416,12 @@ document.addEventListener('visibilitychange',function(){if(!document.hidden&&ON&
 // ---- Vista pública (al escanear el QR) ----
 function renderView(l){
   $('#vcode').textContent=dc(l);$('#vcode').style.color=colorOf(l,null);var d=dias(l.f);
-  var rows=[['Especie / variedad',l.s],['Origen del material',l.o],['Experimento',l.ex],['Tratamiento / lote',l.tr],['Número de lote',l.bn],['Etapa',l.et],['Frasco del lote',(l.fn&&l.nf)?l.fn+' de '+l.nf:''],['Pasaje',l.pa],['Tipo de explante',l.e],['Medio preparado el',l.fpm?fmt(l.fpm):''],['Fecha de siembra',fmt(l.f)],['Entrada a cámara',l.fcam?fmt(l.fcam):''],['Tiempo en cultivo',d===null?'':d+' días'],['Medio de cultivo',l.m],['Recipiente',l.rc],['Cantidad de recipientes',l.nf],['Medio por recipiente',l.vm?l.vm+' ml':''],['Total de medio',(l.nf&&l.vm)?(Math.round(l.nf*l.vm*100)/100)+' ml':''],['Incubación',l.i],['Registrado por',l.r],['Medio preparado por',l.pm],['Sembrado por',l.ps],['Operador en cámara',l.pc]];
+  var rows=[['Especie / variedad',l.s],['Origen del material',l.o],['Experimento',l.ex],['Tratamiento / lote',l.tr],['Número de lote',l.bn],['Etapa',l.et],['Frasco del lote',(l.fn&&l.nf)?l.fn+' de '+l.nf:''],['Pasaje',l.pa],['Tipo de explante',l.e],['Medio preparado el',l.fpm?fmt(l.fpm):''],['Fecha de siembra',fmt(l.f)],['Entrada a cámara',l.fcam?fmt(l.fcam):''],['Tiempo en cultivo',d===null?'':d+' días'],['Medio de cultivo',l.m],['Recipiente',l.rc],['Cantidad de recipientes',l.nf],['Medio por recipiente',l.vm?l.vm+' ml':''],['Total de medio',(l.nf&&l.vm)?(Math.round(l.nf*l.vm*100)/100)+' ml':''],['Incubación',l.i],['Duración de la fase',l.fq?l.fq+' '+({mes:'meses',sem:'semanas',dia:'días'}[l.fut]||''):''],['Registrado por',l.r],['Medio preparado por',l.pm],['Sembrado por',l.ps],['Operador en cámara',l.pc]];
   var h=rows.filter(function(r){return r[1]}).map(function(r){return '<div class="row"><span>'+esc(r[0])+'</span><span>'+esc(r[1])+'</span></div>'}).join('');
   if(l.lo)h+='<div class="row"><span>Lote de origen</span><span><a style="color:var(--acc2)" href="'+esc(baseUrl()+'#id='+encodeURIComponent(l.lo))+'" onclick="setTimeout(function(){location.reload()},50)">'+esc(l.lod||l.lo)+'</a></span></div>';
   if(l.t)h+='<div class="row"><span>Estado</span><span><span class="badge '+sc(l.t)+'">'+esc(l.t)+'</span>'+(l.td?'<br><small class="note">'+esc(fmt(l.td))+(l.f&&/Contaminado|Oxida/.test(l.t)?' · a los '+Math.max(0,Math.round((new Date(l.td+'T00:00:00')-new Date(l.f+'T00:00:00'))/864e5))+' días de la siembra':'')+(l.tu?' · '+esc(l.tu):'')+'</small>':'')+'</span></div>';
   [['Observaciones del estado',l.to],['Detalle del origen',l.d],['Procedimiento',l.p],['Notas',l.n]].forEach(function(r){if(r[1])h+='<div class="blk"><b>'+esc(r[0])+'</b><p>'+esc(r[1])+'</p></div>'});
-  $('#vbody').innerHTML=h;
+  $('#vbody').innerHTML=viewBand(l)+h;
 }
 var hs=location.hash,mm=hs.match(/^#(id|z|l)=(.+)$/);
 if(mm){

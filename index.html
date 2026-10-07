@@ -55,6 +55,7 @@ button.dng{background:transparent;color:var(--bad);border:1px solid var(--bad)}
 .band{display:flex;justify-content:space-between;gap:8px;padding:8px 12px;border-radius:10px;font-weight:700;font-size:15px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .alp{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px;background:#FFFBEB}.arow{display:flex;gap:8px;align-items:center;padding:6px 0;font-size:14px;border-top:1px solid var(--line)}.arow .pb{margin:0}
 #leg{margin-bottom:10px;font-size:14px}#leg summary{cursor:pointer;font-weight:600;color:var(--acc2)}.legr{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.legr .pb{margin:0}
+.hrow{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line);align-items:flex-start;font-size:14px}.hrow small{display:block;color:var(--mut)}.hrow em{color:var(--acc2);font-style:normal;font-weight:600}
 </style>
 </head>
 <body>
@@ -152,6 +153,7 @@ button.dng{background:transparent;color:var(--bad);border:1px solid var(--bad)}
       <label>Observaciones</label><textarea id="uobs" style="min-height:64px"></textarea>
       <button id="upd" class="sec">Guardar estado</button>
       <p class="note" id="updn"></p>
+      <h2>Historial de estados</h2><div id="lhist"></div>
     </div>
   </div>
 
@@ -224,6 +226,10 @@ function names(){var s={};lots.forEach(function(l){['r','pm','ps','pc','tu'].for
 
 function fillOrigin(){var sel=$('#lo'),c=sel.value,k=slug(editing?(editing.r||''):nm(v('yo')));sel.innerHTML='<option value="">(Ninguno: material nuevo)</option>'+lots.filter(function(x){return slug(x.r||'')===k&&(!editing||x.c!==editing.c)}).map(function(x){return '<option value="'+esc(x.c)+'">'+esc(dc(x)+(x.bn?' (lote '+x.bn+')':'')+(x.tr?' · '+x.tr:''))+' · '+esc(x.e)+' · '+esc(fmt(x.f))+'</option>'}).join('');sel.value=c}
 $('#lo').onchange=function(){var p=lots.filter(function(x){return x.c===$('#lo').value})[0];$('#pa').value=p?(+p.pa||1)+1:1};
+function hist(l){return (l.hs&&l.hs.length)?l.hs:(l.t?[{t:l.t,d:l.td||l.f,u:l.tu||l.r,o:l.to}]:[])}
+function pushH(l,t,d,u,o){var h=hist(l).slice();h.push({t:t,d:d,u:u,o:o||''});l.hs=h;l.t=t;l.td=d;l.tu=u;l.to=o||''}
+function histRows(l){var f=l.f;return hist(l).map(function(e,i){return {e:e,i:i}}).sort(function(a,b){var x=a.e.d||'',y=b.e.d||'';return x<y?1:x>y?-1:b.i-a.i}).map(function(r,k){var e=r.e,n=(f&&e.d)?Math.round((new Date(e.d+'T00:00:00')-new Date(f+'T00:00:00'))/864e5):null;
+  return '<div class="hrow"><span class="badge '+sc(e.t)+'" style="flex:none">'+esc(e.t)+'</span><div><b>'+esc(fmt(e.d))+'</b>'+(e.u?' · '+esc(e.u):'')+(k===0?' · <em>actual</em>':'')+(e.o?'<small>'+esc(e.o)+'</small>':'')+(n!==null&&n>=0?'<small>a los '+n+' días de la siembra</small>':'')+'</div></div>'}).join('')}
 function dn(){var a=$('#fecha').value,b=$('#fobs').value,e=$('#dnote');if(!a||!b){e.textContent='';return}var n=Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/864e5);e.textContent=n>=0?((/Contaminado|Oxida/.test($('#estado').value)?'Contaminación observada':'Observación')+' a los '+n+' días de la siembra.'):''}
 function tot(){var n=+v('nf'),m=+v('vm');$('#tot').textContent=n&&m?'Total de medio: '+(Math.round(n*m*100)/100)+' ml ('+n+' × '+m+' ml)':''}
 function setEx(x){x=x||'';var sel=$('#explante'),o=$('#exotro');if(/^Otro: /.test(x)){sel.value='Otro (especificar)';o.value=x.slice(6);o.classList.remove('hide');return}
@@ -316,7 +322,7 @@ function showLabel(l){
   try{$('#lqr').innerHTML=qrSvg(urlFor(l))}catch(e){$('#lqr').textContent='Texto demasiado largo para el QR. Acorta algún texto.'}
   $('#lsum').textContent=(l.ex?'Experimento: '+l.ex+' · ':'')+(l.tr?l.tr+' · ':'')+(l.bn?'Lote '+l.bn+' · ':'')+(l.et?l.et+' · ':'')+(l.nf&&l.rc?l.nf+' × '+l.rc.toLowerCase()+(l.vm?' de '+l.vm+' ml':'')+' · ':'')+l.e+' · siembra '+fmt(l.f)+' · '+(l.t||'En evaluación')+(l.ps?' · sembró '+l.ps:'');
   var bb=batchOf(l);$('#prAll').classList.toggle('hide',bb.length<2);$('#delAll').classList.toggle('hide',bb.length<2);$('#pgrid').textContent='🖨️ Las '+bb.length+' etiquetas en una hoja';$('#pone').textContent='🖨️ '+bb.length+' etiquetas, una por página';$('#delAll').textContent='🗑️ Eliminar los '+bb.length+' frascos del lote';
-  $('#ustado').value=l.t||ES[0];$('#udate').value=today;$('#uobs').value=l.to||'';
+  $('#lhist').innerHTML=histRows(l);$('#ustado').value=l.t||ES[0];$('#udate').value=today;$('#uobs').value=l.to||'';
   $('#updn').textContent=ON?'El QR no cambia: quien lo escanee verá siempre el estado actualizado.':'Los QR ya impresos siguen mostrando el estado de cuando se generaron.';
   $('#label').classList.remove('hide');$('#label').scrollIntoView({behavior:'smooth'});
 }
@@ -378,21 +384,21 @@ $('#save').onclick=async function(){
   var b=$('#save');b.disabled=true;
   try{
     fixLod(l);
-    if(editing){l.c=editing.c;l.ts=editing.ts;if(editing.cl)l.cl=editing.cl;l.r=editing.r||l.r;l.td=l.td||today;if(editing.t!==l.t)l.tu=l.r;else if(editing.tu)l.tu=editing.tu;if(editing.fn){l.fn=editing.fn;l.bt=editing.bt;l.bn=editing.bn}l.nf=editing.nf||l.nf;l.fi=(editing.fi&&editing.fi!==editing.f)?editing.fi:l.f;var bt=batchOf(editing);if($('#eall').checked&&bt.length>1){var keep=['c','ts','cl','fn','bt','t','td','to','tu','r','nf'];await Promise.all(bt.filter(function(x){return x.c!==editing.c}).map(function(x){var o=Object.assign({},l);keep.forEach(function(k){if(x[k]!==undefined)o[k]=x[k];else delete o[k]});return persist(o,false)}))}await persist(l,false)}
+    if(editing){l.c=editing.c;l.ts=editing.ts;if(editing.cl)l.cl=editing.cl;l.r=editing.r||l.r;l.td=l.td||today;l.hs=hist(editing).slice();if(editing.t!==l.t){l.tu=nm(v('yo'));l.hs.push({t:l.t,d:l.td,u:l.tu,o:l.to})}else if(editing.tu)l.tu=editing.tu;if(editing.fn){l.fn=editing.fn;l.bt=editing.bt;l.bn=editing.bn}l.nf=editing.nf||l.nf;l.fi=(editing.fi&&editing.fi!==editing.f)?editing.fi:l.f;var bt=batchOf(editing);if($('#eall').checked&&bt.length>1){var keep=['c','ts','cl','fn','bt','t','td','to','tu','r','nf','hs'];await Promise.all(bt.filter(function(x){return x.c!==editing.c}).map(function(x){var o=Object.assign({},l);keep.forEach(function(k){if(x[k]!==undefined)o[k]=x[k];else delete o[k]});return persist(o,false)}))}await persist(l,false)}
     else{
       if(ON&&!(await refresh())){alert('No se pudo leer la lista actual de lotes, así que no registré nada para evitar números equivocados. Revisa el aviso rojo de arriba e inténtalo de nuevo.');b.disabled=false;return}
       var base=(slug(l.r)||'LOT'),bn=nextBn(l.r);
       l.cl=pick(l.r);var nn=Math.max(1,parseInt(l.nf)||1),recs=[],first=base+'-L'+bn+'-'+pd(1);
-      for(var i=1;i<=nn;i++){var o=Object.assign({},l);o.c=base+'-L'+bn+'-'+pd(i);o.ts=Date.now()+i;o.fn=i;o.bt=first;o.bn=bn;recs.push(o)}
+      for(var i=1;i<=nn;i++){var o=Object.assign({},l);o.c=base+'-L'+bn+'-'+pd(i);o.ts=Date.now()+i;o.fn=i;o.bt=first;o.bn=bn;o.hs=[{t:l.t,d:l.td,u:l.r,o:l.to}];recs.push(o)}
       await Promise.all(recs.map(function(o){return persist(o,true)}));l=recs[0];
     }
-    if(!editing&&fromBatch&&fromBatch.some(function(x){return x.c===l.lo})){await Promise.all(fromBatch.filter(actv).map(function(x){x.t='Transferido a nuevo medio';x.td=today;x.tu=l.r;return persist(x,false)}))}
+    if(!editing&&fromBatch&&fromBatch.some(function(x){return x.c===l.lo})){await Promise.all(fromBatch.filter(actv).map(function(x){pushH(x,'Transferido a nuevo medio',today,l.r,'Pasó a '+dc(l)+' (fase '+(+l.fs||0)+')');return persist(x,false)}))}
     OX=slug(l.r||'')+'|'+(l.ex||'');if(l.bt)OPEN[l.bt]=true;await refresh();showLabel(l);stopEdit();
   }catch(e){alert('No se pudo guardar. Revisa tu conexión e inténtalo de nuevo.')}
   b.disabled=false;
 };
 $('#upd').onclick=async function(){if(!cur)return;
-  cur.t=$('#ustado').value;cur.td=$('#udate').value||today;cur.to=v('uobs');cur.tu=nm(v('yo'));
+  pushH(cur,$('#ustado').value,$('#udate').value||today,nm(v('yo')),v('uobs'));
   try{await persist(cur,false);await refresh();showLabel(cur)}catch(e){alert('No se pudo guardar el estado.')}};
 $('#del').onclick=async function(){if(!cur||!confirm('¿Eliminar el lote '+dc(cur)+'? Se borrará para todas las personas y no se puede deshacer.'))return;
   try{var dc=cur.c;if(ON)await dbDel(dc);lots=lots.filter(function(x){return x.c!==dc});if(!ON)sset('lots',lots);cur=null;$('#label').classList.add('hide');await refresh();tab(2)}catch(e){alert('No se pudo eliminar.')}};
@@ -421,6 +427,7 @@ function renderView(l){
   if(l.lo)h+='<div class="row"><span>Lote de origen</span><span><a style="color:var(--acc2)" href="'+esc(baseUrl()+'#id='+encodeURIComponent(l.lo))+'" onclick="setTimeout(function(){location.reload()},50)">'+esc(l.lod||l.lo)+'</a></span></div>';
   if(l.t)h+='<div class="row"><span>Estado</span><span><span class="badge '+sc(l.t)+'">'+esc(l.t)+'</span>'+(l.td?'<br><small class="note">'+esc(fmt(l.td))+(l.f&&/Contaminado|Oxida/.test(l.t)?' · a los '+Math.max(0,Math.round((new Date(l.td+'T00:00:00')-new Date(l.f+'T00:00:00'))/864e5))+' días de la siembra':'')+(l.tu?' · '+esc(l.tu):'')+'</small>':'')+'</span></div>';
   [['Observaciones del estado',l.to],['Detalle del origen',l.d],['Procedimiento',l.p],['Notas',l.n]].forEach(function(r){if(r[1])h+='<div class="blk"><b>'+esc(r[0])+'</b><p>'+esc(r[1])+'</p></div>'});
+  if(hist(l).length)h+='<div class="blk"><b>Historial de estados</b>'+histRows(l)+'</div>';
   $('#vbody').innerHTML=viewBand(l)+h;
 }
 var hs=location.hash,mm=hs.match(/^#(id|z|l)=(.+)$/);

@@ -55,7 +55,7 @@ button.dng{background:transparent;color:var(--bad);border:1px solid var(--bad)}
 .band{display:flex;justify-content:space-between;gap:8px;padding:8px 12px;border-radius:10px;font-weight:700;font-size:15px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .alp{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px;background:#FFFBEB}.arow{display:flex;gap:8px;align-items:center;padding:6px 0;font-size:14px;border-top:1px solid var(--line)}.arow .pb{margin:0}
 #leg{margin-bottom:10px;font-size:14px}#leg summary{cursor:pointer;font-weight:600;color:var(--acc2)}.legr{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.legr .pb{margin:0}
-.hrow{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line);align-items:flex-start;font-size:14px}.hrow small{display:block;color:var(--mut)}.hrow em{color:var(--acc2);font-style:normal;font-weight:600}
+.hrow{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line);align-items:flex-start;font-size:14px}.hrow>div{flex:1}.hdel{width:auto;margin:0;padding:4px 9px;font-size:14px;background:transparent;color:var(--bad);border:1px solid var(--line);flex:none}.hrow small{display:block;color:var(--mut)}.hrow em{color:var(--acc2);font-style:normal;font-weight:600}
 </style>
 </head>
 <body>
@@ -154,6 +154,7 @@ button.dng{background:transparent;color:var(--bad);border:1px solid var(--bad)}
       <button id="upd" class="sec">Guardar estado</button>
       <p class="note" id="updn"></p>
       <h2>Historial de estados</h2><div id="lhist"></div>
+      <button id="hdelAll" class="dng hide">🗑️ Eliminar todo el historial</button>
     </div>
   </div>
 
@@ -227,9 +228,10 @@ function names(){var s={};lots.forEach(function(l){['r','pm','ps','pc','tu'].for
 function fillOrigin(){var sel=$('#lo'),c=sel.value,k=slug(editing?(editing.r||''):nm(v('yo')));sel.innerHTML='<option value="">(Ninguno: material nuevo)</option>'+lots.filter(function(x){return slug(x.r||'')===k&&(!editing||x.c!==editing.c)}).map(function(x){return '<option value="'+esc(x.c)+'">'+esc(dc(x)+(x.bn?' (lote '+x.bn+')':'')+(x.tr?' · '+x.tr:''))+' · '+esc(x.e)+' · '+esc(fmt(x.f))+'</option>'}).join('');sel.value=c}
 $('#lo').onchange=function(){var p=lots.filter(function(x){return x.c===$('#lo').value})[0];$('#pa').value=p?(+p.pa||1)+1:1};
 function hist(l){return (l.hs&&l.hs.length)?l.hs:(l.t?[{t:l.t,d:l.td||l.f,u:l.tu||l.r,o:l.to}]:[])}
-function pushH(l,t,d,u,o){var h=hist(l).slice();h.push({t:t,d:d,u:u,o:o||''});l.hs=h;l.t=t;l.td=d;l.tu=u;l.to=o||''}
-function histRows(l){var f=l.f;return hist(l).map(function(e,i){return {e:e,i:i}}).sort(function(a,b){var x=a.e.d||'',y=b.e.d||'';return x<y?1:x>y?-1:b.i-a.i}).map(function(r,k){var e=r.e,n=(f&&e.d)?Math.round((new Date(e.d+'T00:00:00')-new Date(f+'T00:00:00'))/864e5):null;
-  return '<div class="hrow"><span class="badge '+sc(e.t)+'" style="flex:none">'+esc(e.t)+'</span><div><b>'+esc(fmt(e.d))+'</b>'+(e.u?' · '+esc(e.u):'')+(k===0?' · <em>actual</em>':'')+(e.o?'<small>'+esc(e.o)+'</small>':'')+(n!==null&&n>=0?'<small>a los '+n+' días de la siembra</small>':'')+'</div></div>'}).join('')}
+function syncCur(l){var h=l.hs||[];if(!h.length){l.t='';l.td='';l.tu='';l.to='';return}var b=0;h.forEach(function(e,i){if((e.d||'')>=(h[b].d||''))b=i});var e=h[b];l.t=e.t;l.td=e.d;l.tu=e.u||'';l.to=e.o||''}
+function pushH(l,t,d,u,o){var h=hist(l).slice();h.push({t:t,d:d,u:u,o:o||''});l.hs=h;syncCur(l)}
+function histRows(l,ed){var f=l.f;return hist(l).map(function(e,i){return {e:e,i:i}}).sort(function(a,b){var x=a.e.d||'',y=b.e.d||'';return x<y?1:x>y?-1:b.i-a.i}).map(function(r,k){var e=r.e,n=(f&&e.d)?Math.round((new Date(e.d+'T00:00:00')-new Date(f+'T00:00:00'))/864e5):null;
+  return '<div class="hrow"><span class="badge '+sc(e.t)+'" style="flex:none">'+esc(e.t)+'</span><div><b>'+esc(fmt(e.d))+'</b>'+(e.u?' · '+esc(e.u):'')+(k===0?' · <em>actual</em>':'')+(e.o?'<small>'+esc(e.o)+'</small>':'')+(n!==null&&n>=0?'<small>a los '+n+' días de la siembra</small>':'')+'</div>'+(ed?'<button class="hdel" data-i="'+r.i+'" title="Eliminar este estado">🗑</button>':'')+'</div>'}).join('')}
 function dn(){var a=$('#fecha').value,b=$('#fobs').value,e=$('#dnote');if(!a||!b){e.textContent='';return}var n=Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/864e5);e.textContent=n>=0?((/Contaminado|Oxida/.test($('#estado').value)?'Contaminación observada':'Observación')+' a los '+n+' días de la siembra.'):''}
 function tot(){var n=+v('nf'),m=+v('vm');$('#tot').textContent=n&&m?'Total de medio: '+(Math.round(n*m*100)/100)+' ml ('+n+' × '+m+' ml)':''}
 function setEx(x){x=x||'';var sel=$('#explante'),o=$('#exotro');if(/^Otro: /.test(x)){sel.value='Otro (especificar)';o.value=x.slice(6);o.classList.remove('hide');return}
@@ -289,7 +291,7 @@ $('#cal').onclick=function(){var p=cur&&plan(cur);if(!p)return;var d=addD(p.e,-p
   window.open('https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent('Preparar medio · '+dc(cur)+' (fase '+((+cur.fs||0)+1)+')')+'&dates='+k(d)+'/'+k(e)+'&details='+encodeURIComponent('Cambio de medio el '+fmt(p.e)+(cur.tr?' · '+cur.tr:'')+(cur.ex?' · Experimento: '+cur.ex:'')),'_blank')};
 function baseUrl(){return (sget('base','')||location.href.split('#')[0]).trim().split('#')[0]}
 var LIM=140;
-function lite(l){if(!$('#lite').checked)return l;var o={};for(var k in l)o[k]=(/^(p|n|d|to)$/.test(k)&&typeof l[k]==='string'&&l[k].length>LIM)?l[k].slice(0,LIM)+'…':l[k];return o}
+function lite(l){if(!$('#lite').checked)return l;var o={};for(var k in l)if(k!=='hs')o[k]=(/^(p|n|d|to)$/.test(k)&&typeof l[k]==='string'&&l[k].length>LIM)?l[k].slice(0,LIM)+'…':l[k];return o}
 function urlFor(l){return baseUrl()+(ON?'#id='+encodeURIComponent(l.c||'x'):pack(lite(l)))}
 function qrSvg(t){var q;try{q=qrcode(0,'M');q.addData(t);q.make()}catch(e){q=qrcode(0,'L');q.addData(t);q.make()}return q.createSvgTag({cellSize:4,margin:0,scalable:true})}
 function exval(){var e=$('#explante').value;return /^Otro/.test(e)&&$('#exotro').value.trim()?'Otro: '+$('#exotro').value.trim():e}
@@ -322,7 +324,7 @@ function showLabel(l){
   try{$('#lqr').innerHTML=qrSvg(urlFor(l))}catch(e){$('#lqr').textContent='Texto demasiado largo para el QR. Acorta algún texto.'}
   $('#lsum').textContent=(l.ex?'Experimento: '+l.ex+' · ':'')+(l.tr?l.tr+' · ':'')+(l.bn?'Lote '+l.bn+' · ':'')+(l.et?l.et+' · ':'')+(l.nf&&l.rc?l.nf+' × '+l.rc.toLowerCase()+(l.vm?' de '+l.vm+' ml':'')+' · ':'')+l.e+' · siembra '+fmt(l.f)+' · '+(l.t||'En evaluación')+(l.ps?' · sembró '+l.ps:'');
   var bb=batchOf(l);$('#prAll').classList.toggle('hide',bb.length<2);$('#delAll').classList.toggle('hide',bb.length<2);$('#pgrid').textContent='🖨️ Las '+bb.length+' etiquetas en una hoja';$('#pone').textContent='🖨️ '+bb.length+' etiquetas, una por página';$('#delAll').textContent='🗑️ Eliminar los '+bb.length+' frascos del lote';
-  $('#lhist').innerHTML=histRows(l);$('#ustado').value=l.t||ES[0];$('#udate').value=today;$('#uobs').value=l.to||'';
+  $('#lhist').innerHTML=histRows(l,true)||'<p class="note">Sin estados guardados.</p>';$('#hdelAll').classList.toggle('hide',!hist(l).length);$('#ustado').value=l.t||ES[0];$('#udate').value=today;$('#uobs').value=l.to||'';
   $('#updn').textContent=ON?'El QR no cambia: quien lo escanee verá siempre el estado actualizado.':'Los QR ya impresos siguen mostrando el estado de cuando se generaron.';
   $('#label').classList.remove('hide');$('#label').scrollIntoView({behavior:'smooth'});
 }
@@ -397,6 +399,10 @@ $('#save').onclick=async function(){
   }catch(e){alert('No se pudo guardar. Revisa tu conexión e inténtalo de nuevo.')}
   b.disabled=false;
 };
+$('#lhist').onclick=async function(e){var b=e.target.closest('.hdel');if(!b||!cur)return;var i=+b.dataset.i,h=hist(cur).slice(),en=h[i];if(!en||!confirm('¿Eliminar el estado «'+en.t+'» del '+fmt(en.d)+'? No se puede deshacer.'))return;
+  h.splice(i,1);cur.hs=h;syncCur(cur);try{await persist(cur,false);await refresh();showLabel(cur)}catch(x){alert('No se pudo eliminar el estado.')}};
+$('#hdelAll').onclick=async function(){if(!cur||!confirm('¿Eliminar TODO el historial de estados de '+dc(cur)+'? No se puede deshacer.'))return;
+  cur.hs=[];syncCur(cur);try{await persist(cur,false);await refresh();showLabel(cur)}catch(x){alert('No se pudo eliminar el historial.')}};
 $('#upd').onclick=async function(){if(!cur)return;
   pushH(cur,$('#ustado').value,$('#udate').value||today,nm(v('yo')),v('uobs'));
   try{await persist(cur,false);await refresh();showLabel(cur)}catch(e){alert('No se pudo guardar el estado.')}};

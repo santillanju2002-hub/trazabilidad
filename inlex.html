@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="light">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trazabilidad In Vitro</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+<style>
+:root{--bg:#ffffff;--inp:#f4f8f4;--card:#ffffff;color-scheme:light;--ink:#15301d;--mut:#5d7766;--acc:#2f8f4e;--acc2:#1f6b38;--line:#d6e5d9;--ok:#2f8f4e;--bad:#c2372d;--warn:#c98a10;--info:#3b7fb8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5;overflow-wrap:anywhere}
+.w{max-width:620px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:8px 0 2px;color:var(--acc2)}h2{font-size:15px;margin:18px 0 0;color:var(--acc2);border-bottom:1px solid var(--line);padding-bottom:4px}
+.sub{color:var(--mut);margin:0 0 10px;font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 1px 6px rgba(20,60,30,.08)}
+label{display:block;font-size:13px;font-weight:600;margin:12px 0 4px}
+input,select,textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:var(--inp);color:var(--ink);font:inherit}
+textarea{min-height:90px;resize:vertical}
+button{font:inherit;border:0;border-radius:12px;padding:12px 16px;background:var(--acc);color:#fff;font-weight:600;cursor:pointer;width:100%;margin-top:14px}
+button:disabled{opacity:.6}button.sec{background:transparent;color:var(--acc2);border:1px solid var(--line)}
+button.dng{background:transparent;color:var(--bad);border:1px solid var(--bad)}
+.tabs{display:flex;gap:8px;margin-bottom:12px}.tabs button{margin:0;background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.tabs button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.lot{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.lot:last-child{border:0}.lot b{color:var(--acc2)}.lot small{color:var(--mut);display:block}
+.qr{width:240px;max-width:75%;margin:10px auto;background:#fff;padding:8px;border-radius:10px}.qr svg{width:100%;height:auto;display:block}
+.code{text-align:center;font-weight:700;font-size:18px}
+.row{display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--line);font-size:15px}
+.row span:first-child{color:var(--mut);flex:none}.row span:last-child{text-align:right}
+.blk{padding:10px 0;border-bottom:1px solid var(--line)}.blk b{display:block;color:var(--mut);font-size:13px;font-weight:600;margin-bottom:3px}.blk p{margin:0;white-space:pre-wrap;font-size:15px}
+.badge{display:inline-block;color:#fff;border-radius:99px;padding:3px 11px;font-size:12px;font-weight:600;background:var(--acc)}
+.ok{background:var(--ok)}.bad{background:var(--bad)}.warn{background:var(--warn)}.info{background:var(--info)}
+.hide{display:none!important}.note{font-size:12px;color:var(--mut)}#stat{font-size:13px;font-weight:600;margin-bottom:10px}
+.flt{display:flex;gap:8px;margin-bottom:6px}
+@media print{body *{visibility:hidden}#label,#label *{visibility:visible}#label .np,#label .np *{display:none!important}#label{position:absolute;left:0;top:0;width:100%;border:0}#label .qr{width:70%;max-width:none}}
+#sheet{display:none}
+#sheet .pl{display:flex;gap:8px;align-items:center;border:1px dashed #888;padding:6px;margin:3px;color:#000;background:#fff;font-size:11px;line-height:1.35;break-inside:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+#sheet .pq{width:84px;flex:none}#sheet .pq svg{width:100%;height:auto;display:block}
+@media print{body.ps .w{display:none!important}body.ps #sheet,body.ps #sheet *{visibility:visible}body.ps #sheet.grid{display:flex;flex-wrap:wrap;position:absolute;left:0;top:0;width:100%}body.ps #sheet.grid .pl{width:48%}body.ps #sheet.one{display:block}body.ps #sheet.one .pl{page-break-after:always;border:0;font-size:15px;margin:0}body.ps #sheet.one .pq{width:150px}}
+#tb button{margin:6px 0 0;flex:1;padding:10px 8px;font-size:14px}
+.lot .ck,.bh .ck{width:22px;height:22px;padding:0;margin:0;flex:none;accent-color:var(--acc)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:6px}
+.chips button{width:auto;margin:0;flex:none;padding:8px 14px;font-size:14px;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:99px}
+.chips button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.exh{cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;margin:18px 0 8px;font-weight:700;color:var(--acc2);font-size:15px}
+.exh button{width:auto;margin:0;padding:6px 10px;font-size:12px;flex:none}
+.bt{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
+.bh{display:flex;gap:10px;align-items:center;padding:10px 12px;cursor:pointer;background:var(--inp)}
+.bh small{display:block;color:var(--mut)}.bl{padding:0 12px}
+.pb{display:inline-block;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:700;margin-left:6px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.pbar{height:10px;background:var(--inp);border-radius:5px;overflow:hidden;margin:8px 0 4px;border:1px solid var(--line)}.pbar div{height:100%}
+.al{margin-top:6px;padding:7px 10px;border-radius:8px;font-size:13px;font-weight:600}.al.warn{background:#FEF3C7;color:#92400E}.al.bad{background:#FEE2E2;color:#991B1B}
+.band{display:flex;justify-content:space-between;gap:8px;padding:8px 12px;border-radius:10px;font-weight:700;font-size:15px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.alp{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px;background:#FFFBEB}.arow{display:flex;gap:8px;align-items:center;padding:6px 0;font-size:14px;border-top:1px solid var(--line)}.arow .pb{margin:0}
+#leg{margin-bottom:10px;font-size:14px}#leg summary{cursor:pointer;font-weight:600;color:var(--acc2)}.legr{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.legr .pb{margin:0}
+.hrow{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line);align-items:flex-start;font-size:14px}.hrow>div{flex:1}.hdel{width:auto;margin:0;padding:4px 9px;font-size:14px;background:transparent;color:var(--bad);border:1px solid var(--line);flex:none}.hrow small{display:block;color:var(--mut)}.hrow em{color:var(--acc2);font-style:normal;font-weight:600}
+.statsgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}.statbox{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--inp)}.statbox b{display:block;font-size:22px;color:var(--acc2)}.statbox small{color:var(--mut)}.minirow{padding:8px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px}.minirow:last-child{border-bottom:0}.tag{display:inline-block;padding:2px 8px;border-radius:99px;background:#e8f3eb;color:var(--acc2);font-size:12px;font-weight:600}@media(max-width:430px){.statsgrid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="w">
+<div id="view" class="hide">
+  <span class="badge">🌱 Trazabilidad in vitro</span>
+  <h1 id="vcode"></h1><p class="sub">Información del lote</p>
+  <div class="card" id="vbody">Cargando…</div>
+</div>
+
+<div id="app">
+  <h1>🌱 Trazabilidad In Vitro</h1>
+  <div id="stat"></div>
+  <button class="sec" id="rf" style="margin:0 0 10px;padding:8px 14px;font-size:13px;width:auto">↻ Actualizar lista</button>
+  <div class="card"><label style="margin-top:0">Tu nombre (se guarda en este dispositivo)</label><input id="yo" placeholder="Ej.: Juan Santillán" list="nombres"></div>
+  <datalist id="nombres"></datalist>
+  <div class="tabs"><button id="t1" class="on">Nuevo lote</button><button id="t2">Lotes (<span id="cnt">0</span>)</button><button id="t3">📊 Análisis</button></div>
+
+  <div id="p1" class="card">
+    <h2 style="margin-top:0">1. Etapa, fase y plazo</h2>
+    <label>¿Qué vas a hacer?</label><select id="etapa"></select>
+    <div class="note" id="afn"></div>
+    <label>Fase del cultivo</label><select id="fase"></select>
+    <div id="fnote" style="font-size:13px;margin:6px 0"></div>
+    <div class="flt"><div style="flex:1"><label>Duración de esta fase</label><input type="number" min="1" id="fq" value="4" inputmode="numeric"></div><div style="flex:1"><label>Unidad</label><select id="fut"><option value="mes">Meses</option><option value="sem">Semanas</option><option value="dia">Días</option></select></div></div>
+    <label>Avisarme cuántos días antes del cambio de medio</label><input type="number" min="0" id="fa" value="7" inputmode="numeric">
+    <label>Experimento (opcional)</label><input id="ex" list="exps" placeholder="Ej.: Efecto de la BAP en la multiplicación">
+    <datalist id="exps"></datalist>
+    <label>Tratamiento o nombre de este lote (opcional)</label><input id="tr" placeholder="Ej.: Control (MS solo)  /  MS + 1 mg/L BAP">
+    <label>Lote de origen (si es repique o trasplante de otro lote)</label><select id="lo"></select>
+    <label>Número de pasaje (subcultivo)</label><input type="number" min="1" id="pa" value="1" inputmode="numeric">
+
+    <h2>2. Responsables</h2>
+    <label>Medio de cultivo preparado por</label><input id="pm" list="nombres" placeholder="Nombre de quien preparó el medio">
+    <label>Sembrado por</label><input id="ps" list="nombres" placeholder="Nombre de quien sembró">
+    <label>Operador en cámara de flujo</label><input id="pc" list="nombres" placeholder="Nombre de quien trabajó en la cámara">
+
+    <h2>3. Material vegetal</h2>
+    <label>Especie / variedad</label><input id="especie" placeholder="Ej.: Musa AAA cv. Williams">
+    <label>Origen del material</label><select id="origen"></select>
+    <label>Detalle del origen</label><textarea id="odet" placeholder="Ej.: planta madre del invernadero 2, edad 8 meses; o: subcultivo 3 del lote LOT-260915-002"></textarea>
+    <label>Tipo de explante</label><select id="explante"></select>
+    <input id="exotro" class="hide" placeholder="Especifica el explante" style="margin-top:8px">
+
+    <h2>4. Siembra</h2>
+    <label>Fecha de preparación del medio</label><input type="date" id="fpm">
+    <label>Fecha de siembra</label><input type="date" id="fecha">
+    <label>Fecha de entrada a la cámara de incubación</label><input type="date" id="fcam">
+    <label>Procedimiento (desinfección y siembra)</label><textarea id="proc" placeholder="Ej.: lavado con detergente, etanol 70% 30 s, NaClO 1% 10 min, 3 enjuagues con agua estéril..."></textarea>
+    <label>Medio de cultivo</label><textarea id="medio" style="min-height:64px" placeholder="Ej.: MS + 1 mg/L BAP + 30 g/L sacarosa, pH 5.8"></textarea>
+    <label>Tipo de recipiente</label><select id="rec"></select>
+    <div class="flt"><div style="flex:1"><label>Cantidad de recipientes</label><input type="number" min="1" id="nf" inputmode="numeric" placeholder="Ej.: 20"></div><div style="flex:1"><label>ml de medio por recipiente</label><input type="number" min="0" id="vm" inputmode="decimal" placeholder="Ej.: 10"></div></div>
+    <div class="note" id="tot"></div>
+    <label>Condiciones de incubación (opcional)</label><input id="incub" placeholder="Ej.: 25 °C, fotoperiodo 16/8 h">
+
+    <h2>5. Parámetros del explante</h2>
+    <div class="flt"><div style="flex:1"><label>Edad fisiológica</label><select id="exedad"><option value="">No especificada</option><option>Juvenil</option><option>Adulto</option><option>Joven</option><option>Maduro</option><option>Inmaduro</option></select></div><div style="flex:1"><label>Edad exacta</label><input id="exedadn" placeholder="Ej.: 8 meses"></div></div>
+    <div class="flt"><div style="flex:1"><label>Posición</label><select id="expos"><option value="">No especificada</option><option>Apical</option><option>Media</option><option>Basal</option><option>Internodal</option><option>Nodal</option></select></div><div style="flex:1"><label>Orientación</label><select id="exori"><option value="">No especificada</option><option>Adaxial arriba</option><option>Abaxial arriba</option><option>Vertical</option><option>Horizontal</option><option>Otro</option></select></div></div>
+    <div class="flt"><div style="flex:1"><label>Largo (mm)</label><input type="number" step="0.01" id="exlargo"></div><div style="flex:1"><label>Ancho (mm)</label><input type="number" step="0.01" id="exancho"></div></div>
+    <label>Material inicial o derivado</label><select id="matcat"><option>Explante inicial</option><option>Material derivado in vitro</option></select>
+
+    <h2>6. Medio de cultivo estructurado</h2>
+    <div class="flt"><div style="flex:1"><label>Medio basal</label><select id="mbasal"><option value="">No especificado</option><option>MS</option><option>½ MS</option><option>B5</option><option>WPM</option><option>N6</option><option>DKW</option><option>Otro</option></select></div><div style="flex:1"><label>Fuente de carbono</label><select id="mcarbon"><option value="">No especificada</option><option>Sacarosa</option><option>Glucosa</option><option>Fructosa</option><option>Otra</option></select></div></div>
+    <div class="flt"><div style="flex:1"><label>Carbono (g/L)</label><input type="number" step="0.01" id="mcarbong"></div><div style="flex:1"><label>Gelificante</label><input id="mgel" placeholder="Ej.: agar 7 g/L"></div></div>
+    <div class="flt"><div style="flex:1"><label>Auxina</label><select id="maux"><option value="">Ninguna</option><option>2,4-D</option><option>ANA / NAA</option><option>AIA / IAA</option><option>AIB / IBA</option><option>Picloram</option><option>Dicamba</option><option>Otra</option></select></div><div style="flex:1"><label>Concentración</label><input id="mauxc" placeholder="Ej.: 1 mg/L"></div></div>
+    <div class="flt"><div style="flex:1"><label>Citoquinina</label><select id="mcyt"><option value="">Ninguna</option><option>BAP / BA</option><option>Kinetina</option><option>TDZ</option><option>Zeatina</option><option>2-iP</option><option>Otra</option></select></div><div style="flex:1"><label>Concentración</label><input id="mcytc" placeholder="Ej.: 0.5 mg/L"></div></div>
+    <div class="flt"><div style="flex:1"><label>Otros reguladores</label><input id="mreg" placeholder="Ej.: GA3, ABA"></div><div style="flex:1"><label>Concentración</label><input id="mregc" placeholder="Ej.: 0.1 mg/L"></div></div>
+    <div class="flt"><div style="flex:1"><label>pH antes del autoclave</label><input type="number" step="0.01" id="phpre"></div><div style="flex:1"><label>pH después del autoclave</label><input type="number" step="0.01" id="phpost"></div></div>
+    <div class="flt"><div style="flex:1"><label>Ajuste de pH</label><select id="phadj"><option value="">No especificado</option><option>NaOH</option><option>HCl</option><option>Otro</option></select></div><div style="flex:1"><label>Volumen total (mL)</label><input type="number" step="0.1" id="mtotal"></div></div>
+
+    <h2>7. Desinfección y esterilización</h2>
+    <div class="flt"><div style="flex:1"><label>Etanol (%)</label><input type="number" step="0.1" id="eth"></div><div style="flex:1"><label>Tiempo (s)</label><input type="number" step="1" id="etht"></div></div>
+    <div class="flt"><div style="flex:1"><label>NaClO (%)</label><input type="number" step="0.01" id="naclo"></div><div style="flex:1"><label>Tiempo (min)</label><input type="number" step="0.1" id="naclot"></div></div>
+    <div class="flt"><div style="flex:1"><label>Tensioactivo</label><input id="tensio" placeholder="Ej.: Tween 20"></div><div style="flex:1"><label>Concentración</label><input id="tensioc" placeholder="Ej.: 0.1%"></div></div>
+    <div class="flt"><div style="flex:1"><label>N.º de enjuagues</label><input type="number" id="enjuagues"></div><div style="flex:1"><label>Tipo de agua</label><select id="agua"><option value="">No especificada</option><option>Destilada</option><option>Desionizada</option><option>Estéril</option><option>Otra</option></select></div></div>
+    <div class="flt"><div style="flex:1"><label>Autoclave (°C)</label><input type="number" step="0.1" id="autot"></div><div style="flex:1"><label>Presión (psi)</label><input type="number" step="0.1" id="autop"></div></div>
+    <div class="flt"><div style="flex:1"><label>Tiempo autoclave (min)</label><input type="number" id="autom"></div><div style="flex:1"><label>Ciclo / equipo</label><input id="autoc" placeholder="Ej.: AC-01"></div></div>
+
+    <h2>8. Incubación estructurada</h2>
+    <div class="flt"><div style="flex:1"><label>Temperatura (°C)</label><input type="number" step="0.1" id="temp"></div><div style="flex:1"><label>Humedad (%)</label><input type="number" step="0.1" id="hum"></div></div>
+    <div class="flt"><div style="flex:1"><label>Luz (h/día)</label><input type="number" step="0.1" id="luzh"></div><div style="flex:1"><label>Oscuridad (h/día)</label><input type="number" step="0.1" id="osch"></div></div>
+    <div class="flt"><div style="flex:1"><label>Intensidad (µmol m⁻² s⁻¹)</label><input type="number" step="0.1" id="intens"></div><div style="flex:1"><label>Tipo de luz</label><select id="luztipo"><option value="">No especificado</option><option>LED</option><option>Fluorescente</option><option>Natural controlada</option><option>Otra</option></select></div></div>
+    <label>Condición de incubación</label><select id="condinc"><option value="">No especificada</option><option>Luz</option><option>Oscuridad</option><option>Fotoperiodo</option></select>
+
+    <h2>9. Respuesta morfogénica</h2>
+    <select id="morf"><option value="">Sin evaluar</option><option>Sin respuesta</option><option>Hinchamiento</option><option>Desdiferenciación</option><option>Formación de callo</option><option>Callo compacto</option><option>Callo friable</option><option>Callo organogénico</option><option>Callo embriogénico</option><option>Organogénesis directa</option><option>Organogénesis indirecta</option><option>Embriogénesis somática directa</option><option>Embriogénesis somática indirecta</option><option>Formación de brotes</option><option>Formación de raíces</option><option>Formación de embriones</option><option>Regeneración de planta</option></select>
+    <div class="flt"><div style="flex:1"><label>Tipo de callo</label><select id="callot"><option value="">No aplica</option><option>Compacto</option><option>Friable</option><option>Nodular</option><option>Granular</option><option>Acuoso / hiperhídrico</option><option>Embriogénico</option><option>No embriogénico</option><option>Organogénico</option><option>Necrosado</option></select></div><div style="flex:1"><label>Color del callo</label><select id="calloc"><option value="">No aplica</option><option>Blanco</option><option>Crema</option><option>Amarillo</option><option>Verde</option><option>Beige</option><option>Café</option><option>Café oscuro</option></select></div></div>
+    <div class="flt"><div style="flex:1"><label>¿Estructuras embrionarias?</label><select id="embpres"><option value="">No evaluado</option><option>Sí</option><option>No</option><option>En evaluación</option></select></div><div style="flex:1"><label>Etapa embrionaria</label><select id="embfase"><option value="">No aplica</option><option>Proembrión</option><option>Globular</option><option>Corazón</option><option>Torpedo</option><option>Cotiledonar</option><option>Germinación</option></select></div></div>
+    <div class="flt"><div style="flex:1"><label>N.º de brotes</label><input type="number" step="1" id="nbrotes"></div><div style="flex:1"><label>N.º de raíces</label><input type="number" step="1" id="nraices"></div></div>
+    <div class="flt"><div style="flex:1"><label>N.º de embriones</label><input type="number" step="1" id="nemb"></div><div style="flex:1"><label>Supervivencia (%)</label><input type="number" step="0.1" id="sup"></div></div>
+
+    <h2>10. Diseño experimental</h2>
+    <div class="flt"><div style="flex:1"><label>Tratamiento</label><input id="trat" placeholder="Ej.: T1"></div><div style="flex:1"><label>Repetición</label><input id="rep" placeholder="Ej.: R1"></div></div>
+    <div class="flt"><div style="flex:1"><label>N.º de explantes</label><input type="number" id="nexpl"></div><div style="flex:1"><label>Explantes/recipiente</label><input type="number" id="exrec"></div></div>
+    <div class="flt"><div style="flex:1"><label>Control</label><select id="control"><option value="">No especificado</option><option>Sí</option><option>No</option></select></div><div style="flex:1"><label>Variable principal</label><select id="variable"><option value="">No especificada</option><option>Contaminación</option><option>Oxidación</option><option>Supervivencia</option><option>Callogénesis</option><option>Embriogénesis</option><option>Regeneración</option><option>Enraizamiento</option></select></div></div>
+
+    <h2>11. Estado y sanidad</h2>
+    <label>Estado del lote</label><select id="estado"></select>
+    <label>Fecha en que se observó este estado</label><input type="date" id="fobs">
+    <div class="note" id="dnote"></div>
+    <label>Observaciones del estado (opcional)</label><textarea id="eobs" style="min-height:64px"></textarea>
+    <label>Notas (opcional)</label><textarea id="notas"></textarea>
+    <div id="liteBox"><label style="display:flex;gap:8px;align-items:flex-start;font-weight:500"><input type="checkbox" id="lite" style="width:auto;margin-top:4px"> QR ligero: recorta textos largos dentro del QR (modo local).</label><div id="meter" class="note"></div></div>
+    <div id="eallw" class="hide"><label style="display:flex;gap:8px;align-items:flex-start;font-weight:500"><input type="checkbox" id="eall" style="width:auto;margin-top:4px"> Aplicar estos cambios también a los demás frascos del lote. Si no la marcas, solo cambia este frasco.</label></div>
+    <div id="prev" class="note" style="font-size:14px;margin-top:10px"></div>
+    <button id="save">Registrar lote y generar QR</button>
+    <button id="cancel" class="sec hide">Cancelar edición</button>
+  </div>
+
+  <div id="p3" class="card hide">
+    <h2 style="margin-top:0">📊 Panel de análisis</h2>
+    <div id="statsGrid" class="statsgrid"></div>
+    <h2>Resultados por tratamiento</h2>
+    <div id="treatStats"></div>
+    <h2>Respuesta morfogénica</h2>
+    <div id="morphStats"></div>
+    <h2>Etapas de embriogénesis</h2>
+    <div id="embStats"></div>
+    <button id="exportCsv" class="sec">⬇️ Exportar datos CSV</button>
+    <button id="backLots" class="sec">← Volver a lotes</button>
+  </div>
+
+  <div id="p2" class="card hide">
+    <div id="alerts"></div>
+    <details id="leg"></details>
+    <div id="who" class="chips"></div>
+    <div id="newbar" class="hide"><button id="newExp">➕ Nuevo lote o experimento</button></div>
+    <div class="flt" style="margin-top:10px"><input id="q" placeholder="Buscar por código, persona, especie…"><select id="fe" style="max-width:48%"></select></div>
+    <div class="flt" id="tb"><button class="sec" id="selAll"></button><button class="dng" id="delSel"></button></div>
+    <div id="list"></div><p class="note" id="empty">Aún no hay lotes registrados.</p>
+  </div>
+
+  <div id="label" class="card hide">
+    <div id="lband" class="band hide"></div>
+    <div class="code" id="lcode"></div>
+    <div class="qr" id="lqr"></div>
+    <div class="note" style="text-align:center" id="lsum"></div>
+    <button id="print" class="np">🖨️ Imprimir esta etiqueta</button>
+    <button id="nextF" class="np hide"></button>
+    <button id="cal" class="sec np hide">📅 Agregar recordatorio al calendario</button>
+    <div id="prAll" class="np hide"><button id="pgrid" class="sec"></button><button id="pone" class="sec"></button></div>
+    <button id="edit" class="sec np">✏️ Editar lote</button>
+    <button id="del" class="dng np">🗑️ Eliminar este frasco / lote</button>
+    <button id="delAll" class="dng np hide"></button>
+    <div class="np">
+      <h2>Actualizar estado</h2>
+      <select id="ustado"></select>
+      <label>Fecha</label><input type="date" id="udate">
+      <label>Observaciones</label><textarea id="uobs" style="min-height:64px"></textarea>
+      <button id="upd" class="sec">Guardar estado</button>
+      <p class="note" id="updn"></p>
+      <h2>Historial de estados</h2><div id="lhist"></div>
+      <button id="hdelAll" class="dng hide">🗑️ Eliminar todo el historial</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <label style="margin-top:0">Enlace del sitio (el que abrirá el QR)</label>
+    <input id="base" placeholder="Pega aquí el enlace público de tu sitio">
+    <p class="note">Si abres la app desde tu enlace de GitHub, se usa solo.</p>
+  </div>
+</div>
+</div>
+
+<div id="sheet"></div>
+<script>
+// ====== CONFIGURACIÓN DE FIREBASE: pega aquí tus dos datos (ver guía) ======
+var FB={projectId:'trazabilidad-invitro',apiKey:'AIzaSyAGMD8LsyYSLEgehCe41lPwfql5B4C0hQU'};
+// ==========================================================================
+var $=function(s){return document.querySelector(s)};
+var ON=!!(FB.projectId&&FB.apiKey);
+var API='https://firestore.googleapis.com/v1/projects/'+FB.projectId+'/databases/(default)/documents/lotes';
+var EX={'Meristemos y ápices':['Meristemo apical (domo meristemático)','Meristemo apical con 1-2 primordios foliares','Ápice caulinar (brote terminal)','Meristemo axilar','Meristemo floral'],
+'Yemas':['Yema apical (terminal)','Yema axilar','Yema lateral','Yema basal','Yema latente','Yema adventicia','Yema floral','Yema foliar','Yema de tubérculo (ojo)','Yema de rizoma'],
+'Tallo':['Segmento nodal (nudo con yema axilar)','Segmento internodal (entrenudo)','Segmento apical de tallo','Segmento medio de tallo','Segmento basal de tallo','Estaca uninodal','Estaca binodal','Microestaca','Tallo etiolado','Estolón','Pseudotallo'],
+'Hoja':['Hoja completa','Hoja joven en expansión','Lámina foliar','Disco foliar','Segmento de lámina con nervadura central','Pecíolo','Vaina foliar'],
+'Raíz y órganos de reserva':['Raíz primaria','Segmento de raíz','Raíz adventicia','Ápice radicular','Raíz tuberosa','Tubérculo','Segmento de tubérculo con ojo','Bulbo','Escama de bulbo','Bulbillo','Cormo','Rizoma','Segmento de rizoma'],
+'Semilla y embrión':['Semilla madura','Semilla inmadura','Eje embrionario','Embrión cigótico maduro','Embrión cigótico inmaduro','Embrión somático','Endospermo','Megagametofito (coníferas)','Nucela','Cotiledón','Hipocótilo','Epicótilo','Radícula','Plúmula','Plántula (de semilla)'],
+'Flor y fruto':['Botón floral','Flor completa','Inflorescencia','Pedúnculo floral','Pétalo','Sépalo','Antera','Filamento','Polen / micrósporas','Ovario','Óvulo','Estilo y estigma','Receptáculo','Fruto inmaduro','Pericarpo (pared del fruto)'],
+'Material derivado in vitro':['Callo','Callo embriogénico','Callo organogénico','Suspensión celular','Protoplastos','Brote in vitro','Microbrote','Plántula in vitro','Raíces transformadas (pilosas)','Protocormo','Microtubérculo','Cormo in vitro'],
+'Esporas y gametofitos':['Espora (helechos)','Gametofito','Talo'],
+'Otro':['Otro (especificar)']};
+var OR=['Planta madre de invernadero','Planta madre de campo','Planta madre de vivero / casa de sombra','Planta madre in vitro (subcultivo)','Plántula in vitro de cultivo anterior','Semilla comercial','Semilla de planta madre','Semilla germinada in vitro','Banco de germoplasma','Otro'];
+var ES=['En evaluación','Sano (sin contaminación)','Contaminado: bacteria','Contaminado: hongo','Contaminado: levadura','Oxidación / fenolización','Descartado','Transferido a nuevo medio'];
+var ET=['Establecimiento (introducción del explante)','Multiplicación','Repique / subcultivo','Trasplante a nuevo medio','Propagación','Germinación in vitro','Inducción de callo','Embriogénesis somática','Elongación','Enraizamiento','Aclimatación / endurecimiento','Conservación (crecimiento mínimo)','Otro'];
+var RC=['Tubo de ensayo','Tarro de mermelada','Frasco de vidrio mediano','Frasco grande','Erlenmeyer','Caja Petri','Frasco GA7 / Magenta','Bolsa o biorreactor','Otro'];
+function opts(a){return a.map(function(x){return '<option>'+x+'</option>'}).join('')}
+var eh='';for(var g in EX)eh+='<optgroup label="'+g+'">'+opts(EX[g])+'</optgroup>';
+$('#explante').innerHTML=eh;$('#etapa').innerHTML='<option value="">Selecciona la etapa…</option>'+opts(ET);$('#rec').innerHTML=opts(RC);$('#origen').innerHTML=opts(OR);$('#estado').innerHTML=opts(ES);$('#ustado').innerHTML=opts(ES);$('#fe').innerHTML='<option value="">Todos los estados</option>'+opts(ES);
+
+var mem={};
+function sget(k,d){try{var v=localStorage.getItem(k);return v===null?(k in mem?mem[k]:d):JSON.parse(v)}catch(e){return k in mem?mem[k]:d}}
+function sset(k,v){mem[k]=v;try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function esc(s){var d=document.createElement('div');d.textContent=s==null?'':String(s);return d.innerHTML}
+function b64(u){var s='',i=0;for(;i<u.length;i+=8192)s+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+function unb64(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';var b=atob(s),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u}
+function pack(l){var o={};for(var k in l)if(l[k]!==''&&l[k]!=null)o[k]=l[k];return '#z='+b64(pako.deflate(JSON.stringify(o)))}
+function unpack(h){if(h.indexOf('#z=')===0)return JSON.parse(pako.inflate(unb64(h.slice(3)),{to:'string'}));var s=h.slice(3);return JSON.parse(decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/')+'==='.slice((s.length+3)%4)))))}
+function fmt(d){var p=(d||'').split('-');if(p.length!==3)return d||'—';var m=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];return +p[2]+' de '+m[+p[1]-1]+' de '+p[0]}
+function dias(d){var t=new Date(d+'T00:00:00');if(isNaN(t))return null;return Math.max(0,Math.floor((Date.now()-t.getTime())/864e5))}
+function sc(s){s=s||'';return /Contaminado|Descartado/.test(s)?'bad':/Oxida/.test(s)?'warn':/Sano|Transferido/.test(s)?'ok':'info'}
+var today=new Date().toISOString().slice(0,10);
+
+// ---- Base de datos (Firebase Firestore por REST) o modo local ----
+function K(){return 'key='+FB.apiKey}
+function fromDoc(d){return JSON.parse(d.fields.j.stringValue)}
+async function dbList(){var out=[],tok='';do{var r=await fetch(API+'?pageSize=300&'+K()+(tok?'&pageToken='+encodeURIComponent(tok):''),{cache:'no-store'});if(!r.ok)throw new Error(r.status);var j=await r.json();(j.documents||[]).forEach(function(d){try{out.push(fromDoc(d))}catch(e){}});tok=j.nextPageToken||''}while(tok);return out}
+async function dbGet(id){var r=await fetch(API+'/'+encodeURIComponent(id)+'?'+K(),{cache:'no-store'});if(!r.ok)throw new Error(r.status);return fromDoc(await r.json())}
+async function dbSet(l,create){var r=await fetch(API+'/'+encodeURIComponent(l.c)+'?'+K()+(create?'&currentDocument.exists=false':''),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields:{j:{stringValue:JSON.stringify(l)}}})});if(!r.ok){var e=new Error(r.status);e.status=r.status;throw e}}
+async function dbDel(id){var r=await fetch(API+'/'+encodeURIComponent(id)+'?'+K(),{method:'DELETE'});if(!r.ok)throw new Error(r.status)}
+function setStat(ok,code){$('#stat').innerHTML=!ON?'💾 Modo local: los lotes solo se guardan en este dispositivo':ok?'🟢 Conectado: lotes compartidos y sincronizados':'🔴 No se pudo leer la base de datos'+(code=='429'?' (se agotó el límite diario de lecturas gratuitas; se restablece solo en unas horas)':code?' (error '+esc(code)+')':'')}
+
+var lots=[],cur=null,editing=null;
+async function refresh(){var ok=true;
+  if(ON){try{lots=await dbList();setStat(true)}catch(e){ok=false;setStat(false,e.message)}}else{lots=sget('lots',[]);setStat(true)}
+  lots.sort(function(a,b){return (b.ts||0)-(a.ts||0)});renderList();names();exps();fillOrigin();prev();return ok
+}
+async function persist(l,create){
+  if(ON){await dbSet(l,create);return}
+  var i=lots.findIndex(function(x){return x.c===l.c});if(i<0)lots.push(l);else lots[i]=l;sset('lots',lots);
+}
+function names(){var s={};lots.forEach(function(l){['r','pm','ps','pc','tu'].forEach(function(k){if(l[k])s[nm(l[k])]=1})});var y=$('#yo').value.trim();if(y)s[y]=1;$('#nombres').innerHTML=Object.keys(s).sort().map(function(n){return '<option value="'+esc(n)+'">'}).join('')}
+
+function fillOrigin(){var sel=$('#lo'),c=sel.value,k=slug(editing?(editing.r||''):nm(v('yo')));sel.innerHTML='<option value="">(Ninguno: material nuevo)</option>'+lots.filter(function(x){return slug(x.r||'')===k&&(!editing||x.c!==editing.c)}).map(function(x){return '<option value="'+esc(x.c)+'">'+esc(dc(x)+(x.bn?' (lote '+x.bn+')':'')+(x.tr?' · '+x.tr:''))+' · '+esc(x.e)+' · '+esc(fmt(x.f))+'</option>'}).join('');sel.value=c}
+$('#lo').onchange=function(){var p=lots.filter(function(x){return x.c===$('#lo').value})[0];$('#pa').value=p?(+p.pa||1)+1:1};
+function hist(l){return (l.hs&&l.hs.length)?l.hs:(l.t?[{t:l.t,d:l.td||l.f,u:l.tu||l.r,o:l.to}]:[])}
+function syncCur(l){var h=l.hs||[];if(!h.length){l.t='';l.td='';l.tu='';l.to='';return}var b=0;h.forEach(function(e,i){if((e.d||'')>=(h[b].d||''))b=i});var e=h[b];l.t=e.t;l.td=e.d;l.tu=e.u||'';l.to=e.o||''}
+function pushH(l,t,d,u,o){var h=hist(l).slice();h.push({t:t,d:d,u:u,o:o||''});l.hs=h;syncCur(l)}
+function histRows(l,ed){var f=l.f;return hist(l).map(function(e,i){return {e:e,i:i}}).sort(function(a,b){var x=a.e.d||'',y=b.e.d||'';return x<y?1:x>y?-1:b.i-a.i}).map(function(r,k){var e=r.e,n=(f&&e.d)?Math.round((new Date(e.d+'T00:00:00')-new Date(f+'T00:00:00'))/864e5):null;
+  return '<div class="hrow"><span class="badge '+sc(e.t)+'" style="flex:none">'+esc(e.t)+'</span><div><b>'+esc(fmt(e.d))+'</b>'+(e.u?' · '+esc(e.u):'')+(k===0?' · <em>actual</em>':'')+(e.o?'<small>'+esc(e.o)+'</small>':'')+(n!==null&&n>=0?'<small>a los '+n+' días de la siembra</small>':'')+'</div>'+(ed?'<button class="hdel" data-i="'+r.i+'" title="Eliminar este estado">🗑</button>':'')+'</div>'}).join('')}
+function dn(){var a=$('#fecha').value,b=$('#fobs').value,e=$('#dnote');if(!a||!b){e.textContent='';return}var n=Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/864e5);e.textContent=n>=0?((/Contaminado|Oxida/.test($('#estado').value)?'Contaminación observada':'Observación')+' a los '+n+' días de la siembra.'):''}
+function tot(){var n=+v('nf'),m=+v('vm');$('#tot').textContent=n&&m?'Total de medio: '+(Math.round(n*m*100)/100)+' ml ('+n+' × '+m+' ml)':''}
+function setEx(x){x=x||'';var sel=$('#explante'),o=$('#exotro');if(/^Otro: /.test(x)){sel.value='Otro (especificar)';o.value=x.slice(6);o.classList.remove('hide');return}
+  o.classList.add('hide');if(!x)return;if(![].some.call(sel.options,function(p){return p.value===x})){var op=document.createElement('option');op.textContent=x;sel.insertBefore(op,sel.firstChild)}sel.value=x}
+function fillFrom(p){
+  $('#especie').value=p.s||'';$('#origen').value=p.o||OR[0];$('#odet').value=p.d||'';
+  setEx(p.e);
+  $('#proc').value=p.p||'';$('#medio').value=p.m||'';$('#incub').value=p.i||'';$('#rec').value=p.rc||RC[0];$('#nf').value=p.nf||'';$('#vm').value=p.vm||'';$('#pm').value=p.pm||'';$('#ps').value=p.ps||'';$('#pc').value=p.pc||'';$('#ex').value=p.ex||'';
+}
+function autofill(){
+  if(editing)return;var e=$('#etapa').value,r=nm(v('yo')),n=$('#afn');n.textContent='';
+  if(!e)return;if(!r){n.textContent='Escribe tu nombre arriba para rellenar automáticamente con tus lotes anteriores.';return}
+  var k=slug(r),p=lots.filter(function(l){return slug(l.r||'')===k&&l.et===e}).sort(function(a,b){return (b.ts||0)-(a.ts||0)})[0];
+  if(!p)return;fillFrom(p);
+  n.textContent='✨ Rellené los datos con tu último lote de «'+e+'» ('+dc(p)+'). Cambia lo que necesites.';meter();
+}
+function exps(){var k=slug(nm(v('yo'))),o={};lots.forEach(function(l){if(slug(l.r||'')===k&&l.ex)o[l.ex]=1});$('#exps').innerHTML=Object.keys(o).sort().map(function(n){return '<option value="'+esc(n).replace(/"/g,'&quot;')+'">'}).join('')}
+function addToExp(n){if(editing)stopEdit();tab(1);var k=slug(nm(v('yo'))),p=lots.filter(function(l){return slug(l.r||'')===k&&l.ex===n}).sort(function(a,b){return (b.ts||0)-(a.ts||0)})[0];
+  if(p){$('#etapa').value=p.et||'';fillFrom(p)}$('#ex').value=n;$('#tr').value='';$('#afn').textContent='Copié los datos del último lote de este experimento. Cambia el tratamiento y lo que sea distinto (por ejemplo, el medio).';meter();window.scrollTo(0,0);$('#tr').focus()}
+$('#etapa').onchange=autofill;
+var sel={},VIS=[],OPEN={},BAT={},who=null,OX=null;
+function bar(){var n=Object.keys(sel).length;$('#delSel').textContent='🗑️ Eliminar seleccionados ('+n+')';$('#delSel').disabled=!n;var all=VIS.length&&VIS.every(function(l){return sel[l.c]});$('#selAll').textContent=all?'Quitar selección':'Seleccionar todos'}
+$('#selAll').onclick=function(){var all=VIS.length&&VIS.every(function(l){return sel[l.c]});VIS.forEach(function(l){if(all)delete sel[l.c];else sel[l.c]=1});renderList()};
+$('#delSel').onclick=async function(){var ids=Object.keys(sel);if(!ids.length)return;if(!confirm('¿Eliminar '+ids.length+' frasco(s) seleccionado(s)? Se borran para todas las personas y no se puede deshacer.'))return;
+  $('#delSel').disabled=true;
+  try{if(ON){for(var i=0;i<ids.length;i+=15)await Promise.all(ids.slice(i,i+15).map(function(id){return dbDel(id)}))}lots=lots.filter(function(x){return !sel[x.c]});if(!ON)sset('lots',lots);
+    if(cur&&sel[cur.c]){cur=null;$('#label').classList.add('hide')}sel={};await refresh()}
+  catch(e){alert('No se pudieron eliminar todos. Revisa la lista e inténtalo de nuevo.');await refresh()}};
+var PH=[{n:'Azul',c:'#1D4ED8',f:'#fff'},{n:'Verde',c:'#16A34A',f:'#fff'},{n:'Naranja',c:'#F97316',f:'#111'},{n:'Rojo',c:'#DC2626',f:'#fff'},{n:'Morado',c:'#9333EA',f:'#fff'},{n:'Rosa',c:'#DB2777',f:'#fff'},{n:'Turquesa',c:'#0891B2',f:'#fff'},{n:'Amarillo',c:'#FACC15',f:'#111'},{n:'Café',c:'#92400E',f:'#fff'},{n:'Gris',c:'#4B5563',f:'#fff'}];
+var fromBatch=null;
+function ph(n){return PH[(+n||0)%PH.length]}
+function addD(s,q,u){var d=new Date(s+'T00:00:00');if(isNaN(d))return null;q=+q||0;if(u==='mes')d.setMonth(d.getMonth()+q);else d.setDate(d.getDate()+(u==='sem'?7*q:q));return d}
+function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function plan(l){if(!(+l.fq)||!l.fut)return null;var s=l.fi||l.f,e=addD(s,l.fq,l.fut);if(!e||!s)return null;var a=new Date(s+'T00:00:00'),n=new Date(today+'T00:00:00'),tot=Math.round((e-a)/864e5),el=Math.round((n-a)/864e5);return {s:s,e:iso(e),tot:tot,el:Math.max(0,el),left:tot-el,aviso:+l.fa||7,pct:Math.min(100,Math.max(0,Math.round(100*el/tot)))}}
+function actv(l){return !/Contaminado|Descartado|Transferido/.test(l.t||'')}
+function alertHtml(l){var p=plan(l);if(!p||!actv(l))return '';var n=(+l.fs||0)+1;if(p.left<0)return '<div class="al bad">Vencido hace '+(-p.left)+' días: cambia al medio de la fase '+n+'</div>';if(p.left<=p.aviso)return '<div class="al warn">Faltan '+p.left+' días: prepara el medio de la fase '+n+'</div>';return ''}
+function pb(l){return l.fq?'<span class="pb" style="background:'+ph(l.fs).c+';color:'+ph(l.fs).f+'">Fase '+(+l.fs||0)+' · '+ph(l.fs).n+'</span>':''}
+function barHtml(l){var p=plan(l);if(!p)return '';return '<div class="pbar"><div style="width:'+p.pct+'%;background:'+ph(l.fs).c+'"></div></div><small>Día '+p.el+' de '+p.tot+' · cambio de medio el '+esc(fmt(p.e))+(actv(l)&&p.left>=0?' · faltan '+p.left+' días':'')+'</small>'+alertHtml(l)}
+function viewBand(l){var p=plan(l);if(!l.fq||!p)return '';var c=ph(l.fs);return '<div class="band" style="background:'+c.c+';color:'+c.f+'"><span>Fase '+(+l.fs||0)+' · '+c.n+'</span><span>Cambio: '+esc(fmt(p.e))+'</span></div>'+barHtml(l)}
+function showBand(l){var b=$('#lband'),p=plan(l),c=ph(l.fs),mine=slug(l.r||'')===slug(nm(v('yo')));
+  if(l.fq&&p){b.classList.remove('hide');b.style.background=c.c;b.style.color=c.f;b.innerHTML='<span>Fase '+(+l.fs||0)+' · '+c.n+'</span><span>Cambio: '+esc(fmt(p.e))+'</span>'}else b.classList.add('hide');
+  $('#nextF').classList.toggle('hide',!(actv(l)&&mine));$('#nextF').textContent='➡️ Pasar a la fase '+((+l.fs||0)+1)+' · '+ph((+l.fs||0)+1).n;$('#cal').classList.toggle('hide',!(p&&actv(l)))}
+function fnote(){var n=+$('#fase').value||0,p=ph(n),q=+v('fq'),s=$('#fecha').value,t='<span class="pb" style="margin:0;background:'+p.c+';color:'+p.f+'">Fase '+n+' · '+p.n+'</span>';if(q&&s){var d=addD(s,q,$('#fut').value);if(d)t+=' termina el '+fmt(iso(d))+' (aviso '+(v('fa')||7)+' días antes)'}$('#fnote').innerHTML=t}
+function tpl(){var f=+$('#fase').value;$('#fq').value=4;$('#fut').value=f===0?'mes':'sem';meter()}
+$('#fase').innerHTML=Array.apply(null,Array(20)).map(function(_,i){return '<option value="'+i+'">Fase '+i+' · '+ph(i).n+'</option>'}).join('');
+$('#fase').onchange=tpl;
+$('#leg').innerHTML='<summary>Leyenda de colores por fase</summary><div class="legr">'+PH.map(function(p,i){return '<span class="pb" style="background:'+p.c+';color:'+p.f+'">Fase '+i+' · '+p.n+'</span>'}).join('')+'</div><p class="note">Plantilla: la fase 0 dura 4 meses y las siguientes 4 semanas; puedes cambiarlo en cada lote. Desde la fase 10 los colores se repiten.</p>';
+function startNext(l){
+  if(editing)stopEdit();tab(1);clearForm();fillFrom(l);fillOrigin();var f=(+l.fs||0)+1;
+  $('#etapa').value='Repique / subcultivo';$('#lo').value=l.c;$('#pa').value=(+l.pa||1)+1;$('#fase').value=String(f);tpl();
+  $('#fecha').value=today;$('#fobs').value=today;$('#tr').value=l.tr||'';$('#ex').value=l.ex||'';$('#medio').value='';
+  $('#nf').value=batchOf(l).filter(actv).length||'';fromBatch=batchOf(l);
+  $('#afn').textContent='Pasando a la fase '+f+' desde '+dc(l)+'. Escribe el medio nuevo y revisa la cantidad de frascos. Al guardar, los frascos activos del lote anterior quedarán como «Transferido a nuevo medio».';
+  meter();window.scrollTo(0,0);$('#medio').focus()}
+$('#nextF').onclick=function(){if(cur)startNext(cur)};
+$('#cal').onclick=function(){var p=cur&&plan(cur);if(!p)return;var d=addD(p.e,-p.aviso,'dia'),e=new Date(d.getTime()+864e5),k=function(x){return iso(x).replace(/-/g,'')};
+  window.open('https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent('Preparar medio · '+dc(cur)+' (fase '+((+cur.fs||0)+1)+')')+'&dates='+k(d)+'/'+k(e)+'&details='+encodeURIComponent('Cambio de medio el '+fmt(p.e)+(cur.tr?' · '+cur.tr:'')+(cur.ex?' · Experimento: '+cur.ex:'')),'_blank')};
+function baseUrl(){return (sget('base','')||location.href.split('#')[0]).trim().split('#')[0]}
+var LIM=140;
+function lite(l){if(!$('#lite').checked)return l;var o={};for(var k in l)if(k!=='hs')o[k]=(/^(p|n|d|to)$/.test(k)&&typeof l[k]==='string'&&l[k].length>LIM)?l[k].slice(0,LIM)+'…':l[k];return o}
+function urlFor(l){return baseUrl()+(ON?'#id='+encodeURIComponent(l.c||'x'):pack(lite(l)))}
+function qrSvg(t){var q;try{q=qrcode(0,'M');q.addData(t);q.make()}catch(e){q=qrcode(0,'L');q.addData(t);q.make()}return q.createSvgTag({cellSize:4,margin:0,scalable:true})}
+function exval(){var e=$('#explante').value;return /^Otro/.test(e)&&$('#exotro').value.trim()?'Otro: '+$('#exotro').value.trim():e}
+function v(i){return $('#'+i).value.trim()}
+var PAL=['#3b82f6','#f59e0b','#a855f7','#14b8a6','#ec4899','#84cc16','#06b6d4','#d97706','#6366f1','#22c55e','#d946ef','#0ea5e9'];
+var FIX={'JUAN-ARROYO':'#e5484d'};
+function hcol(k){var h=0;for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0;return PAL[h%PAL.length]}
+function cmap(){var m={};lots.slice().sort(function(a,b){return (a.ts||0)-(b.ts||0)}).forEach(function(l){var k=slug(l.r||'');if(k&&l.cl&&!m[k])m[k]=l.cl});return m}
+function colorOf(l,m){var k=slug(l.r||'');return FIX[k]||(m&&m[k])||l.cl||hcol(k)}
+function pick(r){var k=slug(r||''),m=cmap();if(FIX[k])return FIX[k];if(m[k])return m[k];var u={};for(var x in m)u[m[x]]=1;var f=PAL.filter(function(c){return !u[c]});return f.length?f[0]:hcol(k)}
+function dc(l){return (l.bn?(slug(l.r||'')||'LOT')+'-'+pd(l.fn||1):l.c)+(l.nf?' de '+l.nf:'')}
+function nextBn(r){var k=slug(r),m=0;lots.forEach(function(x){if(slug(x.r||'')===k&&(+x.bn||0)>m)m=+x.bn});return m+1}
+function fixLod(l){var p=l.lo&&lots.filter(function(x){return x.c===l.lo})[0];if(p)l.lod=dc(p)+(p.bn?' · Lote '+p.bn:'')+' · '+fmt(p.f);else delete l.lod}
+function pd(n){return String(n).padStart(3,'0')}
+function batchOf(l){return l.bt?lots.filter(function(x){return x.bt===l.bt}).sort(function(a,b){return (a.fn||0)-(b.fn||0)}):[l]}
+function prev(){var e=$('#prev');if(!e)return;if(editing){e.textContent='Editando '+dc(editing);return}var r=nm(v('yo'));if(!r){e.textContent='';return}var n=Math.max(1,parseInt(v('nf'))||1),b=slug(r)||'LOT',t=(n>1?b+'-001 a '+b+'-'+pd(n)+' (cada uno "de '+n+'", con su propio QR)':b+'-001')+' · Lote '+nextBn(r);e.innerHTML='Se registrará como: <b style="font-size:16px;color:'+pick(r)+'">'+esc(t)+'</b>'}
+function nm(s){return (s||'').trim().replace(/\s+/g,' ').toLowerCase().replace(/(^|\s)\S/g,function(c){return c.toUpperCase()})}
+function slug(s){return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,'-').replace(/^-|-$/g,'')}
+function form(){return {s:v('especie'),o:$('#origen').value,d:v('odet'),e:exval(),f:$('#fecha').value,p:v('proc'),m:v('medio'),i:v('incub'),n:v('notas'),t:$('#estado').value,td:$('#fobs').value||today,fpm:$('#fpm').value,fcam:$('#fcam').value,to:v('eobs'),r:nm(v('yo')),pm:nm(v('pm')),ps:nm(v('ps')),pc:nm(v('pc')),et:$('#etapa').value,lo:$('#lo').value,pa:v('pa'),rc:$('#rec').value,nf:v('nf'),vm:v('vm'),ex:v('ex'),tr:v('tr'),fs:$('#fase').value,fq:v('fq'),fut:$('#fut').value,fa:v('fa'),fi:$('#fecha').value}}
+function meter(){
+  tot();dn();fnote();prev();$('#liteBox').classList.toggle('hide',ON);if(ON)return;
+  var n=urlFor(form()).length,t,c;if(n<400){t='Cómodo';c='var(--ok)'}else if(n<1000){t='Denso: imprime el QR de al menos 3 cm';c='var(--warn)'}else if(n<2300){t='Muy denso: usa etiqueta de 4 cm o más';c='var(--bad)'}else{t='Demasiado largo para el QR: acorta algún texto';c='var(--bad)'}
+  $('#meter').innerHTML='Tamaño del QR: <span style="color:'+c+'">'+t+'</span> ('+n+' caracteres)'}
+['input','change'].forEach(function(ev){$('#p1').addEventListener(ev,meter)});
+$('#explante').onchange=function(){$('#exotro').classList.toggle('hide',!/^Otro/.test(this.value))};
+$('#yo').value=nm(sget('yo',''));$('#yo').onchange=function(){this.value=nm(this.value);sset('yo',this.value);who=null;names();exps();fillOrigin();prev();autofill();renderList()};
+
+function showLabel(l){
+  cur=l;showBand(l);$('#lcode').textContent=dc(l);$('#lcode').style.color=colorOf(l,cmap());
+  try{$('#lqr').innerHTML=qrSvg(urlFor(l))}catch(e){$('#lqr').textContent='Texto demasiado largo para el QR. Acorta algún texto.'}
+  $('#lsum').textContent=(l.ex?'Experimento: '+l.ex+' · ':'')+(l.tr?l.tr+' · ':'')+(l.bn?'Lote '+l.bn+' · ':'')+(l.et?l.et+' · ':'')+(l.nf&&l.rc?l.nf+' × '+l.rc.toLowerCase()+(l.vm?' de '+l.vm+' ml':'')+' · ':'')+l.e+' · siembra '+fmt(l.f)+' · '+(l.t||'En evaluación')+(l.ps?' · sembró '+l.ps:'');
+  var bb=batchOf(l);$('#prAll').classList.toggle('hide',bb.length<2);$('#delAll').classList.toggle('hide',bb.length<2);$('#pgrid').textContent='🖨️ Las '+bb.length+' etiquetas en una hoja';$('#pone').textContent='🖨️ '+bb.length+' etiquetas, una por página';$('#delAll').textContent='🗑️ Eliminar los '+bb.length+' frascos del lote';
+  $('#lhist').innerHTML=histRows(l,true)||'<p class="note">Sin estados guardados.</p>';$('#hdelAll').classList.toggle('hide',!hist(l).length);$('#ustado').value=l.t||ES[0];$('#udate').value=today;$('#uobs').value=l.to||'';
+  $('#updn').textContent=ON?'El QR no cambia: quien lo escanee verá siempre el estado actualizado.':'Los QR ya impresos siguen mostrando el estado de cuando se generaron.';
+  $('#label').classList.remove('hide');$('#label').scrollIntoView({behavior:'smooth'});
+}
+function people(){var m={};lots.forEach(function(l){var k=slug(l.r||'');if(k&&!m[k])m[k]=nm(l.r)});return m}
+function chips(P){var ks=Object.keys(P).sort(),fc={};ks.forEach(function(k){var f=P[k].split(' ')[0];fc[f]=(fc[f]||0)+1});
+  var h='<button data-k=""'+(!who?' class="on"':'')+'>Todos ('+lots.length+')</button>';
+  ks.forEach(function(k){var f=P[k].split(' ')[0],t=fc[f]>1?P[k]:f,n=lots.filter(function(l){return slug(l.r||'')===k}).length;h+='<button data-k="'+k+'"'+(who===k?' class="on"':'')+'>Lotes de '+esc(t)+' ('+n+')</button>'});
+  $('#who').innerHTML=h;Array.prototype.forEach.call($('#who').children,function(b){b.onclick=function(){who=b.dataset.k;renderList()}})}
+function renderList(){
+  var q=$('#q').value.trim().toLowerCase(),fe=$('#fe').value,CM=cmap(),P=people(),me=slug(nm(v('yo')));
+  if(who===null&&me&&P[me])who=me;
+  if(who&&!P[who])who='';
+  chips(P);
+  var base=who?lots.filter(function(l){return slug(l.r||'')===who}):lots;
+  var vis=base.filter(function(l){if(fe&&l.t!==fe)return false;if(!q)return true;return [l.c,l.s,l.e,l.o,l.r,l.pm,l.ps,l.pc,l.t,l.ex,l.tr,l.bn?'lote '+l.bn:''].join(' ').toLowerCase().indexOf(q)>=0});
+  VIS=vis;Object.keys(sel).forEach(function(k){if(!lots.some(function(x){return x.c===k}))delete sel[k]});
+  var mine=!!who&&who===me;$('#newbar').classList.toggle('hide',!mine);
+  $('#cnt').textContent=lots.length;$('#empty').style.display=vis.length?'none':'block';$('#empty').textContent=lots.length?'Ningún lote coincide con la búsqueda.':'Aún no hay lotes registrados.';
+  var AL=[],seen={};base.forEach(function(l){var bk=l.bt||l.c;if(seen[bk])return;seen[bk]=1;var fr=base.filter(function(x){return (x.bt||x.c)===bk});if(!fr.some(actv))return;var f0=fr.sort(function(a,b){return (a.fn||0)-(b.fn||0)})[0],p=plan(f0);if(p&&p.left<=p.aviso)AL.push({l:f0,p:p})});
+  AL.sort(function(a,b){return a.p.left-b.p.left});
+  $('#alerts').innerHTML=AL.length?'<div class="alp"><b>Próximos cambios de fase ('+AL.length+')</b>'+AL.slice(0,8).map(function(a){var c=ph(a.l.fs);return '<div class="arow"><span class="pb" style="background:'+c.c+';color:'+c.f+'">Fase '+(+a.l.fs||0)+'</span><span style="flex:1">'+esc(nm(a.l.r))+' · '+(a.l.bn?'Lote '+a.l.bn:esc(dc(a.l)))+(a.l.tr?' · '+esc(a.l.tr):'')+'</span><b style="color:'+(a.p.left<0?'#B91C1C':'#B45309')+'">'+(a.p.left<0?'Vencido hace '+(-a.p.left)+' d':'En '+a.p.left+' d')+'</b></div>'}).join('')+'</div>':'';
+  var G={},eo=[],h='';BAT={};
+  vis.forEach(function(l){var k=slug(l.r||'')+'|'+(l.ex||'');if(!G[k]){G[k]={n:l.ex||'',r:nm(l.r||''),b:{},o:[],t:0};eo.push(k)}var g=G[k],bk=l.bt||l.c;if(!g.b[bk]){g.b[bk]=[];g.o.push(bk)}g.b[bk].push(l);g.t++});
+  eo.forEach(function(k){var g=G[k];
+    var ox=(OX===k)||q||fe||eo.length===1;h+='<div class="exh" data-k="'+encodeURIComponent(k)+'"><span>'+(ox?'▾':'›')+' 🧪 '+esc(g.n||'Sin experimento')+(who?'':' · '+esc(g.r))+' <small class="note">('+g.o.length+(g.o.length>1?' lotes':' lote')+' · '+g.t+' frascos)</small></span>'+(mine&&g.n?'<button class="sec" data-ex="'+encodeURIComponent(g.n)+'">➕ Nuevo tratamiento</button>':'')+'</div><div class="exb'+(ox?'':' hide')+'">';
+    g.o.forEach(function(bk){var fr=g.b[bk].sort(function(a,b){return (a.fn||0)-(b.fn||0)});BAT[bk]=fr;var f0=fr[0],cnt={};
+      fr.forEach(function(l){var t=l.t||'En evaluación';cnt[t]=(cnt[t]||0)+1});
+      var open=OPEN[bk]||q||fe,all=fr.every(function(l){return sel[l.c]});
+      h+='<div class="bt"><div class="bh" data-bk="'+esc(bk)+'"><input type="checkbox" class="ck"'+(all?' checked':'')+'><div style="flex:1"><b style="color:'+colorOf(f0,CM)+'">'+(f0.bn?'Lote '+f0.bn:'Frasco')+(f0.tr?' · '+esc(f0.tr):'')+'</b>'+pb(f0)+'<small>'+esc(f0.et||'')+' · '+esc(f0.e)+' · '+esc(fmt(f0.f))+' · '+fr.length+(fr.length>1?' frascos':' frasco')+'</small>'+(f0.m?'<small>Medio: '+esc(f0.m.slice(0,70))+'</small>':'')+'<div>'+Object.keys(cnt).map(function(t){return '<span class="badge '+sc(t)+'">'+cnt[t]+' · '+esc(t)+'</span> '}).join('')+'</div>'+barHtml(f0)+'</div><span>'+(open?'▾':'›')+'</span></div><div class="bl'+(open?'':' hide')+'">'+fr.map(function(l){return '<div class="lot" data-c="'+esc(l.c)+'"><input type="checkbox" class="ck"'+(sel[l.c]?' checked':'')+'><div style="flex:1"><b style="color:'+colorOf(l,CM)+'">'+esc(dc(l))+'</b><small>'+esc(l.e)+(l.s?' · '+esc(l.s):'')+'</small><small>'+(l.ps?'Sembró: '+esc(l.ps)+' · ':'')+'Registró: '+esc(l.r||'—')+'</small><span class="badge '+sc(l.t)+'">'+esc(l.t||'En evaluación')+'</span></div><span>›</span></div>'}).join('')+'</div></div>'});h+='</div>'});
+  $('#list').innerHTML=h;
+  Array.prototype.forEach.call(document.querySelectorAll('.bh'),function(el){el.onclick=function(){var k=el.dataset.bk;OPEN[k]=!OPEN[k];renderList()}});
+  Array.prototype.forEach.call(document.querySelectorAll('.bh .ck'),function(c){c.onclick=function(e){e.stopPropagation();var fr=BAT[c.closest('.bh').dataset.bk]||[],all=fr.every(function(l){return sel[l.c]});fr.forEach(function(l){if(all)delete sel[l.c];else sel[l.c]=1});renderList()}});
+  Array.prototype.forEach.call(document.querySelectorAll('.lot'),function(el){el.onclick=function(){var l=lots.filter(function(x){return x.c===el.dataset.c})[0];if(l)showLabel(l)}});
+  Array.prototype.forEach.call(document.querySelectorAll('.lot .ck'),function(c){c.onclick=function(e){e.stopPropagation();var k=c.closest('.lot').dataset.c;if(c.checked)sel[k]=1;else delete sel[k];renderList()}});
+  Array.prototype.forEach.call(document.querySelectorAll('.exh'),function(el){el.onclick=function(){var k=decodeURIComponent(el.dataset.k);OX=(OX===k)?null:k;renderList()}});
+  Array.prototype.forEach.call(document.querySelectorAll('.exh button'),function(b){b.onclick=function(e){e.stopPropagation();addToExp(decodeURIComponent(b.dataset.ex))}});
+  bar();
+}
+$('#q').oninput=renderList;$('#fe').onchange=renderList;
+function tab(n){$('#p1').classList.toggle('hide',n!==1);$('#p2').classList.toggle('hide',n!==2);$('#t1').classList.toggle('on',n===1);$('#t2').classList.toggle('on',n===2)}
+$('#newExp').onclick=function(){if(editing)stopEdit();tab(1);window.scrollTo(0,0);$('#ex').focus()};
+$('#t1').onclick=function(){tab(1)};$('#t2').onclick=function(){tab(2);refresh()};
+$('#fecha').value=today;$('#fobs').value=today;$('#base').value=sget('base','');
+$('#base').onchange=function(){sset('base',this.value.trim());meter()};
+
+function clearForm(){['especie','odet','proc','medio','incub','notas','eobs','exotro','pm','ps','pc','ex','tr'].forEach(function(i){$('#'+i).value=''});$('#estado').value=ES[0];$('#origen').selectedIndex=0;$('#explante').selectedIndex=0;$('#etapa').selectedIndex=0;$('#rec').selectedIndex=0;$('#nf').value='';$('#vm').value='';$('#pa').value=1;$('#lo').value='';$('#afn').textContent='';$('#exotro').classList.add('hide');$('#fecha').value=today;$('#fobs').value=today;$('#fpm').value='';$('#fcam').value='';$('#fase').value='0';$('#fq').value=4;$('#fut').value='mes';$('#fa').value=7;fromBatch=null;meter()}
+function stopEdit(){editing=null;$('#nf').disabled=false;$('#eallw').classList.add('hide');clearForm();$('#save').textContent='Registrar lote y generar QR';$('#cancel').classList.add('hide')}
+function startEdit(l){editing=l;tab(1);$('#eallw').classList.toggle('hide',batchOf(l).length<2);$('#eall').checked=false;$('#nf').disabled=true;$('#especie').value=l.s||'';$('#origen').value=l.o||OR[0];$('#odet').value=l.d||'';setEx(l.e);$('#fecha').value=l.f||today;$('#proc').value=l.p||'';$('#medio').value=l.m||'';$('#incub').value=l.i||'';$('#notas').value=l.n||'';$('#estado').value=l.t||ES[0];$('#eobs').value=l.to||'';$('#pm').value=l.pm||'';$('#ps').value=l.ps||'';$('#pc').value=l.pc||'';$('#ex').value=l.ex||'';$('#tr').value=l.tr||'';$('#fobs').value=l.td||today;$('#fpm').value=l.fpm||'';$('#fcam').value=l.fcam||'';$('#fase').value=String(+l.fs||0);$('#fq').value=l.fq||'';$('#fut').value=l.fut||'mes';$('#fa').value=l.fa||7;fillOrigin();$('#etapa').value=l.et||'';$('#lo').value=l.lo||'';$('#pa').value=l.pa||1;$('#rec').value=l.rc||RC[0];$('#nf').value=l.nf||'';$('#vm').value=l.vm||'';$('#save').textContent='Guardar cambios';$('#cancel').classList.remove('hide');meter();window.scrollTo(0,0)}
+$('#cancel').onclick=stopEdit;
+$('#edit').onclick=function(){if(cur)startEdit(cur)};
+
+$('#save').onclick=async function(){
+  var l=form();if(!l.r){alert('Escribe tu nombre arriba antes de registrar.');return}
+  if(!l.f){alert('Indica la fecha de siembra.');return}
+  if(!l.et){alert('Selecciona la etapa o procedimiento.');return}
+  if((parseInt(l.nf)||0)>100){alert('Máximo 100 recipientes por registro.');return}
+  if(!l.p||!l.m){alert('Completa el procedimiento y el medio.');return}
+  if(!ON&&urlFor(l).length>=2300){alert('El texto es demasiado largo para caber en un QR. Acorta algún texto o conecta la base de datos.');return}
+  var b=$('#save');b.disabled=true;
+  try{
+    fixLod(l);
+    if(editing){l.c=editing.c;l.ts=editing.ts;if(editing.cl)l.cl=editing.cl;l.r=editing.r||l.r;l.td=l.td||today;l.hs=hist(editing).slice();if(editing.t!==l.t){l.tu=nm(v('yo'));l.hs.push({t:l.t,d:l.td,u:l.tu,o:l.to})}else if(editing.tu)l.tu=editing.tu;if(editing.fn){l.fn=editing.fn;l.bt=editing.bt;l.bn=editing.bn}l.nf=editing.nf||l.nf;l.fi=(editing.fi&&editing.fi!==editing.f)?editing.fi:l.f;var bt=batchOf(editing);if($('#eall').checked&&bt.length>1){var keep=['c','ts','cl','fn','bt','t','td','to','tu','r','nf','hs'];await Promise.all(bt.filter(function(x){return x.c!==editing.c}).map(function(x){var o=Object.assign({},l);keep.forEach(function(k){if(x[k]!==undefined)o[k]=x[k];else delete o[k]});return persist(o,false)}))}await persist(l,false)}
+    else{
+      if(ON&&!(await refresh())){alert('No se pudo leer la lista actual de lotes, así que no registré nada para evitar números equivocados. Revisa el aviso rojo de arriba e inténtalo de nuevo.');b.disabled=false;return}
+      var base=(slug(l.r)||'LOT'),bn=nextBn(l.r);
+      l.cl=pick(l.r);var nn=Math.max(1,parseInt(l.nf)||1),recs=[],first=base+'-L'+bn+'-'+pd(1);
+      for(var i=1;i<=nn;i++){var o=Object.assign({},l);o.c=base+'-L'+bn+'-'+pd(i);o.ts=Date.now()+i;o.fn=i;o.bt=first;o.bn=bn;o.hs=[{t:l.t,d:l.td,u:l.r,o:l.to}];recs.push(o)}
+      await Promise.all(recs.map(function(o){return persist(o,true)}));l=recs[0];
+    }
+    if(!editing&&fromBatch&&fromBatch.some(function(x){return x.c===l.lo})){await Promise.all(fromBatch.filter(actv).map(function(x){pushH(x,'Transferido a nuevo medio',today,l.r,'Pasó a '+dc(l)+' (fase '+(+l.fs||0)+')');return persist(x,false)}))}
+    OX=slug(l.r||'')+'|'+(l.ex||'');if(l.bt)OPEN[l.bt]=true;await refresh();showLabel(l);stopEdit();
+  }catch(e){alert('No se pudo guardar. Revisa tu conexión e inténtalo de nuevo.')}
+  b.disabled=false;
+};
+$('#lhist').onclick=async function(e){var b=e.target.closest('.hdel');if(!b||!cur)return;var i=+b.dataset.i,h=hist(cur).slice(),en=h[i];if(!en||!confirm('¿Eliminar el estado «'+en.t+'» del '+fmt(en.d)+'? No se puede deshacer.'))return;
+  h.splice(i,1);cur.hs=h;syncCur(cur);try{await persist(cur,false);await refresh();showLabel(cur)}catch(x){alert('No se pudo eliminar el estado.')}};
+$('#hdelAll').onclick=async function(){if(!cur||!confirm('¿Eliminar TODO el historial de estados de '+dc(cur)+'? No se puede deshacer.'))return;
+  cur.hs=[];syncCur(cur);try{await persist(cur,false);await refresh();showLabel(cur)}catch(x){alert('No se pudo eliminar el historial.')}};
+$('#upd').onclick=async function(){if(!cur)return;
+  pushH(cur,$('#ustado').value,$('#udate').value||today,nm(v('yo')),v('uobs'));
+  try{await persist(cur,false);await refresh();showLabel(cur)}catch(e){alert('No se pudo guardar el estado.')}};
+$('#del').onclick=async function(){if(!cur||!confirm('¿Eliminar el lote '+dc(cur)+'? Se borrará para todas las personas y no se puede deshacer.'))return;
+  try{var dc=cur.c;if(ON)await dbDel(dc);lots=lots.filter(function(x){return x.c!==dc});if(!ON)sset('lots',lots);cur=null;$('#label').classList.add('hide');await refresh();tab(2)}catch(e){alert('No se pudo eliminar.')}};
+$('#delAll').onclick=async function(){if(!cur)return;var b=batchOf(cur);if(!confirm('¿Eliminar los '+b.length+' frascos ('+dc(b[0])+' a '+dc(b[b.length-1])+')? Se borran para todas las personas y no se puede deshacer.'))return;
+  try{var ids=b.map(function(x){return x.c});if(ON)await Promise.all(b.map(function(x){return dbDel(x.c)}));lots=lots.filter(function(x){return ids.indexOf(x.c)<0});if(!ON)sset('lots',lots);cur=null;$('#label').classList.add('hide');await refresh();tab(2)}catch(e){alert('No se pudo eliminar.')}};
+$('#print').onclick=function(){document.body.classList.remove('ps');window.print()};
+function printSheet(mode){
+  if(!cur)return;var b=batchOf(cur),h='',m=cmap();
+  try{b.forEach(function(x){h+='<div class="pl" style="border-top:16px solid '+(x.fq?ph(x.fs).c:'#999')+'"><div class="pq">'+qrSvg(urlFor(x))+'</div><div class="pt"><b style="color:'+colorOf(x,m)+'">'+esc(dc(x))+'</b><br>'+((x.fq&&plan(x))?'<b>Fase '+(+x.fs||0)+' · '+ph(x.fs).n+'</b> · cambio '+esc(fmt(plan(x).e))+'<br>':'')+(x.tr?esc(x.tr)+'<br>':'')+(x.bn?'Lote '+x.bn+' · ':'')+esc(x.et||'')+'<br>'+esc(x.e)+' · '+esc(fmt(x.f))+'</div></div>'})}catch(e){alert('No se pudo generar el QR.');return}
+  var sh=$('#sheet');sh.className=mode;sh.innerHTML=h;document.body.classList.add('ps');
+  setTimeout(function(){window.print()},150);
+}
+$('#pgrid').onclick=function(){printSheet('grid')};$('#pone').onclick=function(){printSheet('one')};
+window.onafterprint=function(){document.body.classList.remove('ps')};
+$('#lite').checked=sget('lite',true);$('#lite').onchange=function(){sset('lite',this.checked);meter()};
+$('#rf').onclick=async function(){this.disabled=true;await refresh();this.disabled=false};
+refresh();meter();
+setInterval(function(){if(ON&&!document.hidden&&!$('#app').classList.contains('hide')&&!$('#p2').classList.contains('hide'))refresh()},120000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&ON&&!$('#app').classList.contains('hide'))refresh()});
+
+// ---- Vista pública (al escanear el QR) ----
+function renderView(l){
+  $('#vcode').textContent=dc(l);$('#vcode').style.color=colorOf(l,null);var d=dias(l.f);
+  var rows=[['Especie / variedad',l.s],['Origen del material',l.o],['Experimento',l.ex],['Tratamiento / lote',l.tr],['Número de lote',l.bn],['Etapa',l.et],['Frasco del lote',(l.fn&&l.nf)?l.fn+' de '+l.nf:''],['Pasaje',l.pa],['Tipo de explante',l.e],['Medio preparado el',l.fpm?fmt(l.fpm):''],['Fecha de siembra',fmt(l.f)],['Entrada a cámara',l.fcam?fmt(l.fcam):''],['Tiempo en cultivo',d===null?'':d+' días'],['Medio de cultivo',l.m],['Recipiente',l.rc],['Cantidad de recipientes',l.nf],['Medio por recipiente',l.vm?l.vm+' ml':''],['Total de medio',(l.nf&&l.vm)?(Math.round(l.nf*l.vm*100)/100)+' ml':''],['Incubación',l.i],['Duración de la fase',l.fq?l.fq+' '+({mes:'meses',sem:'semanas',dia:'días'}[l.fut]||''):''],['Registrado por',l.r],['Medio preparado por',l.pm],['Sembrado por',l.ps],['Operador en cámara',l.pc]];
+  var h=rows.filter(function(r){return r[1]}).map(function(r){return '<div class="row"><span>'+esc(r[0])+'</span><span>'+esc(r[1])+'</span></div>'}).join('');
+  if(l.lo)h+='<div class="row"><span>Lote de origen</span><span><a style="color:var(--acc2)" href="'+esc(baseUrl()+'#id='+encodeURIComponent(l.lo))+'" onclick="setTimeout(function(){location.reload()},50)">'+esc(l.lod||l.lo)+'</a></span></div>';
+  if(l.t)h+='<div class="row"><span>Estado</span><span><span class="badge '+sc(l.t)+'">'+esc(l.t)+'</span>'+(l.td?'<br><small class="note">'+esc(fmt(l.td))+(l.f&&/Contaminado|Oxida/.test(l.t)?' · a los '+Math.max(0,Math.round((new Date(l.td+'T00:00:00')-new Date(l.f+'T00:00:00'))/864e5))+' días de la siembra':'')+(l.tu?' · '+esc(l.tu):'')+'</small>':'')+'</span></div>';
+  [['Observaciones del estado',l.to],['Detalle del origen',l.d],['Procedimiento',l.p],['Notas',l.n]].forEach(function(r){if(r[1])h+='<div class="blk"><b>'+esc(r[0])+'</b><p>'+esc(r[1])+'</p></div>'});
+  if(hist(l).length)h+='<div class="blk"><b>Historial de estados</b>'+histRows(l)+'</div>';
+  $('#vbody').innerHTML=viewBand(l)+h;
+}
+var hs=location.hash,mm=hs.match(/^#(id|z|l)=(.+)$/);
+if(mm){
+  $('#app').classList.add('hide');$('#view').classList.remove('hide');
+  
+  if(mm[1]==='id'){var id=decodeURIComponent(mm[2]);$('#vcode').textContent=id;
+    if(!ON)$('#vbody').textContent='Este sitio aún no está conectado a la base de datos.';
+    else dbGet(id).then(renderView).catch(function(){$('#vbody').textContent='No se encontró este lote. Pudo haber sido eliminado.'})}
+  else{try{renderView(unpack(hs))}catch(e){$('#vbody').textContent='Código no válido.'}}
+}
+</script>
+<script>
+/* ===== MEJORAS V2: parámetros, seguimiento y análisis ===== */
+(function(){
+var ids=['exedad','exedadn','expos','exori','exlargo','exancho','matcat','mbasal','mcarbon','mcarbong','mgel','maux','mauxc','mcyt','mcytc','mreg','mregc','phpre','phpost','phadj','mtotal','eth','etht','naclo','naclot','tensio','tensioc','enjuagues','agua','autot','autop','autom','autoc','temp','hum','luzh','osch','intens','luztipo','condinc','morf','callot','calloc','embpres','embfase','nbrotes','nraices','nemb','sup','trat','rep','nexpl','exrec','control','variable'];
+function val(id){var e=document.getElementById(id);return e?e.value:''}
+function setv(id,v){var e=document.getElementById(id);if(e)e.value=v==null?'':v}
+function extra(){var o={};ids.forEach(function(id){var v=val(id);if(v!=='')o[id]=v});return o}
+var oldForm=form;
+form=function(){var o=oldForm();o.xv=extra();return o}
+var oldStart=startEdit;
+startEdit=function(l){oldStart(l);var x=l.xv||{};ids.forEach(function(id){setv(id,x[id])})}
+var oldStop=stopEdit;
+stopEdit=function(){oldStop();ids.forEach(function(id){setv(id,'')})}
+function showOnly(which){['p1','p2','p3'].forEach(function(id){var e=document.getElementById(id);if(e)e.classList.toggle('hide',id!==which)});['t1','t2','t3'].forEach(function(id){var e=document.getElementById(id);if(e)e.classList.toggle('on',id==='t'+which.slice(1))})}
+var t1=document.getElementById('t1'),t2=document.getElementById('t2'),t3=document.getElementById('t3');
+if(t1)t1.onclick=function(){showOnly('p1');window.scrollTo(0,0)};
+if(t2)t2.onclick=function(){showOnly('p2');renderList();window.scrollTo(0,0)};
+if(t3)t3.onclick=function(){showOnly('p3');renderStats();window.scrollTo(0,0)};
+var back=document.getElementById('backLots');if(back)back.onclick=function(){showOnly('p2');renderList()};
+function pct(n,d){return d?Math.round(100*n/d):0}
+function groupCount(arr,key){var m={};arr.forEach(function(x){var k=x[key]||'Sin especificar';m[k]=(m[k]||0)+1});return m}
+function rows(m){var keys=Object.keys(m).sort(function(a,b){return m[b]-m[a]});return keys.length?keys.map(function(k){return '<div class="minirow"><span>'+esc(k)+'</span><b>'+m[k]+'</b></div>'}).join(''):'<p class="note">Sin datos.</p>'}
+function renderStats(){
+var a=lots||[], active=a.filter(actv), contaminated=a.filter(function(x){return /Contaminado/.test(x.t||'')});
+var callus=a.filter(function(x){return /callo/i.test((x.xv||{}).morf||'')});
+var embry=a.filter(function(x){return /Embriogénesis|embriogénico|embrión/i.test(((x.xv||{}).morf||'')+' '+((x.xv||{}).embfase||'')+' '+(x.et||''))});
+var boxes=[['Lotes',a.length,'total registrados'],['Activos',active.length,'no descartados/transferidos'],['Contaminados',contaminated.length,pct(contaminated.length,a.length)+'% del total'],['Con callogénesis',callus.length,pct(callus.length,a.length)+'% del total'],['Con embriogénesis',embry.length,pct(embry.length,a.length)+'% del total'],['Explantes registrados',a.reduce(function(n,x){return n+(+((x.xv||{}).nexpl)||0)},0),'suma declarada']];
+var sg=document.getElementById('statsGrid');if(sg)sg.innerHTML=boxes.map(function(b){return '<div class="statbox"><small>'+b[0]+'</small><b>'+b[1]+'</b><span class="note">'+b[2]+'</span></div>'}).join('');
+var ts={};a.forEach(function(x){var k=(x.xv||{}).trat||x.tr||'Sin tratamiento';if(!ts[k])ts[k]={n:0,call:0,emb:0};ts[k].n++;if(/callo/i.test((x.xv||{}).morf||''))ts[k].call++;if(/embri/i.test(((x.xv||{}).morf||'')+' '+((x.xv||{}).embfase||'')))ts[k].emb++});
+var te=document.getElementById('treatStats');if(te){var keys=Object.keys(ts);te.innerHTML=keys.length?keys.map(function(k){var z=ts[k];return '<div class="minirow"><span><b>'+esc(k)+'</b><br><small>'+z.n+' lote(s) · callogénesis '+pct(z.call,z.n)+'% · embriogénesis '+pct(z.emb,z.n)+'%</small></span><span class="tag">'+z.n+'</span></div>'}).join(''):'<p class="note">Registra tratamientos para ver la comparación.</p>'}
+var morph=groupCount(a.map(function(x){return {v:(x.xv||{}).morf}}),'v');var ms=document.getElementById('morphStats');if(ms)ms.innerHTML=rows(morph);
+var em=groupCount(a.map(function(x){return {v:(x.xv||{}).embfase}}),'v');var es=document.getElementById('embStats');if(es)es.innerHTML=rows(em);
+}
+var exp=document.getElementById('exportCsv');if(exp)exp.onclick=function(){
+var fields=['codigo','especie','explante','origen','etapa','tratamiento','repeticion','estado','fecha','medio','auxina','auxina_conc','citoquinina','cito_conc','pH_pre','pH_post','morfogenesis','tipo_callo','color_callo','etapa_embrionaria','n_brotes','n_raices','n_embriones','supervivencia'];
+function gv(x,k){var q=x.xv||{};var map={codigo:x.c,especie:x.s,explante:x.e,origen:x.o,etapa:x.et,tratamiento:q.trat||x.tr,repeticion:q.rep,estado:x.t,fecha:x.f,medio:x.m,auxina:q.maux,auxina_conc:q.mauxc,citoquinina:q.mcyt,cito_conc:q.mcytc,pH_pre:q.phpre,pH_post:q.phpost,morfogenesis:q.morf,tipo_callo:q.callot,color_callo:q.calloc,etapa_embrionaria:q.embfase,n_brotes:q.nbrotes,n_raices:q.nraices,n_embriones:q.nemb,supervivencia:q.sup};return map[k]||''}
+var csv=[fields.join(';')].concat((lots||[]).map(function(x){return fields.map(function(k){return '"'+String(gv(x,k)).replace(/"/g,'""')+'"'}).join(';')})).join('\n');
+var blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='trazabilidad_in_vitro.csv';a.click();setTimeout(function(){URL.revokeObjectURL(u)},1000)
+}
+/* Guardado compatible: los nuevos datos viajan dentro de xv y por tanto también se conservan en QR/Firebase. */
+})();
+</script></body>
+</html>

@@ -56,6 +56,7 @@ button.dng{background:transparent;color:var(--bad);border:1px solid var(--bad)}
 .alp{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px;background:#FFFBEB}.arow{display:flex;gap:8px;align-items:center;padding:6px 0;font-size:14px;border-top:1px solid var(--line)}.arow .pb{margin:0}
 #leg{margin-bottom:10px;font-size:14px}#leg summary{cursor:pointer;font-weight:600;color:var(--acc2)}.legr{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.legr .pb{margin:0}
 .hrow{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line);align-items:flex-start;font-size:14px}.hrow>div{flex:1}.hdel{width:auto;margin:0;padding:4px 9px;font-size:14px;background:transparent;color:var(--bad);border:1px solid var(--line);flex:none}.hrow small{display:block;color:var(--mut)}.hrow em{color:var(--acc2);font-style:normal;font-weight:600}
+.statsgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}.statbox{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--inp)}.statbox b{display:block;font-size:22px;color:var(--acc2)}.statbox small{color:var(--mut)}.minirow{padding:8px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px}.minirow:last-child{border-bottom:0}.tag{display:inline-block;padding:2px 8px;border-radius:99px;background:#e8f3eb;color:var(--acc2);font-size:12px;font-weight:600}@media(max-width:430px){.statsgrid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -72,7 +73,7 @@ button.dng{background:transparent;color:var(--bad);border:1px solid var(--bad)}
   <button class="sec" id="rf" style="margin:0 0 10px;padding:8px 14px;font-size:13px;width:auto">↻ Actualizar lista</button>
   <div class="card"><label style="margin-top:0">Tu nombre (se guarda en este dispositivo)</label><input id="yo" placeholder="Ej.: Juan Santillán" list="nombres"></div>
   <datalist id="nombres"></datalist>
-  <div class="tabs"><button id="t1" class="on">Nuevo lote</button><button id="t2">Lotes (<span id="cnt">0</span>)</button></div>
+  <div class="tabs"><button id="t1" class="on">Nuevo lote</button><button id="t2">Lotes (<span id="cnt">0</span>)</button><button id="t3">📊 Análisis</button></div>
 
   <div id="p1" class="card">
     <h2 style="margin-top:0">1. Etapa, fase y plazo</h2>
@@ -111,7 +112,48 @@ button.dng{background:transparent;color:var(--bad);border:1px solid var(--bad)}
     <div class="note" id="tot"></div>
     <label>Condiciones de incubación (opcional)</label><input id="incub" placeholder="Ej.: 25 °C, fotoperiodo 16/8 h">
 
-    <h2>5. Estado y sanidad</h2>
+    <h2>5. Parámetros del explante</h2>
+    <div class="flt"><div style="flex:1"><label>Edad fisiológica</label><select id="exedad"><option value="">No especificada</option><option>Juvenil</option><option>Adulto</option><option>Joven</option><option>Maduro</option><option>Inmaduro</option></select></div><div style="flex:1"><label>Edad exacta</label><input id="exedadn" placeholder="Ej.: 8 meses"></div></div>
+    <div class="flt"><div style="flex:1"><label>Posición</label><select id="expos"><option value="">No especificada</option><option>Apical</option><option>Media</option><option>Basal</option><option>Internodal</option><option>Nodal</option></select></div><div style="flex:1"><label>Orientación</label><select id="exori"><option value="">No especificada</option><option>Adaxial arriba</option><option>Abaxial arriba</option><option>Vertical</option><option>Horizontal</option><option>Otro</option></select></div></div>
+    <div class="flt"><div style="flex:1"><label>Largo (mm)</label><input type="number" step="0.01" id="exlargo"></div><div style="flex:1"><label>Ancho (mm)</label><input type="number" step="0.01" id="exancho"></div></div>
+    <label>Material inicial o derivado</label><select id="matcat"><option>Explante inicial</option><option>Material derivado in vitro</option></select>
+
+    <h2>6. Medio de cultivo estructurado</h2>
+    <div class="flt"><div style="flex:1"><label>Medio basal</label><select id="mbasal"><option value="">No especificado</option><option>MS</option><option>½ MS</option><option>B5</option><option>WPM</option><option>N6</option><option>DKW</option><option>Otro</option></select></div><div style="flex:1"><label>Fuente de carbono</label><select id="mcarbon"><option value="">No especificada</option><option>Sacarosa</option><option>Glucosa</option><option>Fructosa</option><option>Otra</option></select></div></div>
+    <div class="flt"><div style="flex:1"><label>Carbono (g/L)</label><input type="number" step="0.01" id="mcarbong"></div><div style="flex:1"><label>Gelificante</label><input id="mgel" placeholder="Ej.: agar 7 g/L"></div></div>
+    <div class="flt"><div style="flex:1"><label>Auxina</label><select id="maux"><option value="">Ninguna</option><option>2,4-D</option><option>ANA / NAA</option><option>AIA / IAA</option><option>AIB / IBA</option><option>Picloram</option><option>Dicamba</option><option>Otra</option></select></div><div style="flex:1"><label>Concentración</label><input id="mauxc" placeholder="Ej.: 1 mg/L"></div></div>
+    <div class="flt"><div style="flex:1"><label>Citoquinina</label><select id="mcyt"><option value="">Ninguna</option><option>BAP / BA</option><option>Kinetina</option><option>TDZ</option><option>Zeatina</option><option>2-iP</option><option>Otra</option></select></div><div style="flex:1"><label>Concentración</label><input id="mcytc" placeholder="Ej.: 0.5 mg/L"></div></div>
+    <div class="flt"><div style="flex:1"><label>Otros reguladores</label><input id="mreg" placeholder="Ej.: GA3, ABA"></div><div style="flex:1"><label>Concentración</label><input id="mregc" placeholder="Ej.: 0.1 mg/L"></div></div>
+    <div class="flt"><div style="flex:1"><label>pH antes del autoclave</label><input type="number" step="0.01" id="phpre"></div><div style="flex:1"><label>pH después del autoclave</label><input type="number" step="0.01" id="phpost"></div></div>
+    <div class="flt"><div style="flex:1"><label>Ajuste de pH</label><select id="phadj"><option value="">No especificado</option><option>NaOH</option><option>HCl</option><option>Otro</option></select></div><div style="flex:1"><label>Volumen total (mL)</label><input type="number" step="0.1" id="mtotal"></div></div>
+
+    <h2>7. Desinfección y esterilización</h2>
+    <div class="flt"><div style="flex:1"><label>Etanol (%)</label><input type="number" step="0.1" id="eth"></div><div style="flex:1"><label>Tiempo (s)</label><input type="number" step="1" id="etht"></div></div>
+    <div class="flt"><div style="flex:1"><label>NaClO (%)</label><input type="number" step="0.01" id="naclo"></div><div style="flex:1"><label>Tiempo (min)</label><input type="number" step="0.1" id="naclot"></div></div>
+    <div class="flt"><div style="flex:1"><label>Tensioactivo</label><input id="tensio" placeholder="Ej.: Tween 20"></div><div style="flex:1"><label>Concentración</label><input id="tensioc" placeholder="Ej.: 0.1%"></div></div>
+    <div class="flt"><div style="flex:1"><label>N.º de enjuagues</label><input type="number" id="enjuagues"></div><div style="flex:1"><label>Tipo de agua</label><select id="agua"><option value="">No especificada</option><option>Destilada</option><option>Desionizada</option><option>Estéril</option><option>Otra</option></select></div></div>
+    <div class="flt"><div style="flex:1"><label>Autoclave (°C)</label><input type="number" step="0.1" id="autot"></div><div style="flex:1"><label>Presión (psi)</label><input type="number" step="0.1" id="autop"></div></div>
+    <div class="flt"><div style="flex:1"><label>Tiempo autoclave (min)</label><input type="number" id="autom"></div><div style="flex:1"><label>Ciclo / equipo</label><input id="autoc" placeholder="Ej.: AC-01"></div></div>
+
+    <h2>8. Incubación estructurada</h2>
+    <div class="flt"><div style="flex:1"><label>Temperatura (°C)</label><input type="number" step="0.1" id="temp"></div><div style="flex:1"><label>Humedad (%)</label><input type="number" step="0.1" id="hum"></div></div>
+    <div class="flt"><div style="flex:1"><label>Luz (h/día)</label><input type="number" step="0.1" id="luzh"></div><div style="flex:1"><label>Oscuridad (h/día)</label><input type="number" step="0.1" id="osch"></div></div>
+    <div class="flt"><div style="flex:1"><label>Intensidad (µmol m⁻² s⁻¹)</label><input type="number" step="0.1" id="intens"></div><div style="flex:1"><label>Tipo de luz</label><select id="luztipo"><option value="">No especificado</option><option>LED</option><option>Fluorescente</option><option>Natural controlada</option><option>Otra</option></select></div></div>
+    <label>Condición de incubación</label><select id="condinc"><option value="">No especificada</option><option>Luz</option><option>Oscuridad</option><option>Fotoperiodo</option></select>
+
+    <h2>9. Respuesta morfogénica</h2>
+    <select id="morf"><option value="">Sin evaluar</option><option>Sin respuesta</option><option>Hinchamiento</option><option>Desdiferenciación</option><option>Formación de callo</option><option>Callo compacto</option><option>Callo friable</option><option>Callo organogénico</option><option>Callo embriogénico</option><option>Organogénesis directa</option><option>Organogénesis indirecta</option><option>Embriogénesis somática directa</option><option>Embriogénesis somática indirecta</option><option>Formación de brotes</option><option>Formación de raíces</option><option>Formación de embriones</option><option>Regeneración de planta</option></select>
+    <div class="flt"><div style="flex:1"><label>Tipo de callo</label><select id="callot"><option value="">No aplica</option><option>Compacto</option><option>Friable</option><option>Nodular</option><option>Granular</option><option>Acuoso / hiperhídrico</option><option>Embriogénico</option><option>No embriogénico</option><option>Organogénico</option><option>Necrosado</option></select></div><div style="flex:1"><label>Color del callo</label><select id="calloc"><option value="">No aplica</option><option>Blanco</option><option>Crema</option><option>Amarillo</option><option>Verde</option><option>Beige</option><option>Café</option><option>Café oscuro</option></select></div></div>
+    <div class="flt"><div style="flex:1"><label>¿Estructuras embrionarias?</label><select id="embpres"><option value="">No evaluado</option><option>Sí</option><option>No</option><option>En evaluación</option></select></div><div style="flex:1"><label>Etapa embrionaria</label><select id="embfase"><option value="">No aplica</option><option>Proembrión</option><option>Globular</option><option>Corazón</option><option>Torpedo</option><option>Cotiledonar</option><option>Germinación</option></select></div></div>
+    <div class="flt"><div style="flex:1"><label>N.º de brotes</label><input type="number" step="1" id="nbrotes"></div><div style="flex:1"><label>N.º de raíces</label><input type="number" step="1" id="nraices"></div></div>
+    <div class="flt"><div style="flex:1"><label>N.º de embriones</label><input type="number" step="1" id="nemb"></div><div style="flex:1"><label>Supervivencia (%)</label><input type="number" step="0.1" id="sup"></div></div>
+
+    <h2>10. Diseño experimental</h2>
+    <div class="flt"><div style="flex:1"><label>Tratamiento</label><input id="trat" placeholder="Ej.: T1"></div><div style="flex:1"><label>Repetición</label><input id="rep" placeholder="Ej.: R1"></div></div>
+    <div class="flt"><div style="flex:1"><label>N.º de explantes</label><input type="number" id="nexpl"></div><div style="flex:1"><label>Explantes/recipiente</label><input type="number" id="exrec"></div></div>
+    <div class="flt"><div style="flex:1"><label>Control</label><select id="control"><option value="">No especificado</option><option>Sí</option><option>No</option></select></div><div style="flex:1"><label>Variable principal</label><select id="variable"><option value="">No especificada</option><option>Contaminación</option><option>Oxidación</option><option>Supervivencia</option><option>Callogénesis</option><option>Embriogénesis</option><option>Regeneración</option><option>Enraizamiento</option></select></div></div>
+
+    <h2>11. Estado y sanidad</h2>
     <label>Estado del lote</label><select id="estado"></select>
     <label>Fecha en que se observó este estado</label><input type="date" id="fobs">
     <div class="note" id="dnote"></div>
@@ -122,6 +164,19 @@ button.dng{background:transparent;color:var(--bad);border:1px solid var(--bad)}
     <div id="prev" class="note" style="font-size:14px;margin-top:10px"></div>
     <button id="save">Registrar lote y generar QR</button>
     <button id="cancel" class="sec hide">Cancelar edición</button>
+  </div>
+
+  <div id="p3" class="card hide">
+    <h2 style="margin-top:0">📊 Panel de análisis</h2>
+    <div id="statsGrid" class="statsgrid"></div>
+    <h2>Resultados por tratamiento</h2>
+    <div id="treatStats"></div>
+    <h2>Respuesta morfogénica</h2>
+    <div id="morphStats"></div>
+    <h2>Etapas de embriogénesis</h2>
+    <div id="embStats"></div>
+    <button id="exportCsv" class="sec">⬇️ Exportar datos CSV</button>
+    <button id="backLots" class="sec">← Volver a lotes</button>
   </div>
 
   <div id="p2" class="card hide">
@@ -446,5 +501,46 @@ if(mm){
   else{try{renderView(unpack(hs))}catch(e){$('#vbody').textContent='Código no válido.'}}
 }
 </script>
-</body>
+<script>
+/* ===== MEJORAS V2: parámetros, seguimiento y análisis ===== */
+(function(){
+var ids=['exedad','exedadn','expos','exori','exlargo','exancho','matcat','mbasal','mcarbon','mcarbong','mgel','maux','mauxc','mcyt','mcytc','mreg','mregc','phpre','phpost','phadj','mtotal','eth','etht','naclo','naclot','tensio','tensioc','enjuagues','agua','autot','autop','autom','autoc','temp','hum','luzh','osch','intens','luztipo','condinc','morf','callot','calloc','embpres','embfase','nbrotes','nraices','nemb','sup','trat','rep','nexpl','exrec','control','variable'];
+function val(id){var e=document.getElementById(id);return e?e.value:''}
+function setv(id,v){var e=document.getElementById(id);if(e)e.value=v==null?'':v}
+function extra(){var o={};ids.forEach(function(id){var v=val(id);if(v!=='')o[id]=v});return o}
+var oldForm=form;
+form=function(){var o=oldForm();o.xv=extra();return o}
+var oldStart=startEdit;
+startEdit=function(l){oldStart(l);var x=l.xv||{};ids.forEach(function(id){setv(id,x[id])})}
+var oldStop=stopEdit;
+stopEdit=function(){oldStop();ids.forEach(function(id){setv(id,'')})}
+function showOnly(which){['p1','p2','p3'].forEach(function(id){var e=document.getElementById(id);if(e)e.classList.toggle('hide',id!==which)});['t1','t2','t3'].forEach(function(id){var e=document.getElementById(id);if(e)e.classList.toggle('on',id==='t'+which.slice(1))})}
+var t1=document.getElementById('t1'),t2=document.getElementById('t2'),t3=document.getElementById('t3');
+if(t1)t1.onclick=function(){showOnly('p1');window.scrollTo(0,0)};
+if(t2)t2.onclick=function(){showOnly('p2');renderList();window.scrollTo(0,0)};
+if(t3)t3.onclick=function(){showOnly('p3');renderStats();window.scrollTo(0,0)};
+var back=document.getElementById('backLots');if(back)back.onclick=function(){showOnly('p2');renderList()};
+function pct(n,d){return d?Math.round(100*n/d):0}
+function groupCount(arr,key){var m={};arr.forEach(function(x){var k=x[key]||'Sin especificar';m[k]=(m[k]||0)+1});return m}
+function rows(m){var keys=Object.keys(m).sort(function(a,b){return m[b]-m[a]});return keys.length?keys.map(function(k){return '<div class="minirow"><span>'+esc(k)+'</span><b>'+m[k]+'</b></div>'}).join(''):'<p class="note">Sin datos.</p>'}
+function renderStats(){
+var a=lots||[], active=a.filter(actv), contaminated=a.filter(function(x){return /Contaminado/.test(x.t||'')});
+var callus=a.filter(function(x){return /callo/i.test((x.xv||{}).morf||'')});
+var embry=a.filter(function(x){return /Embriogénesis|embriogénico|embrión/i.test(((x.xv||{}).morf||'')+' '+((x.xv||{}).embfase||'')+' '+(x.et||''))});
+var boxes=[['Lotes',a.length,'total registrados'],['Activos',active.length,'no descartados/transferidos'],['Contaminados',contaminated.length,pct(contaminated.length,a.length)+'% del total'],['Con callogénesis',callus.length,pct(callus.length,a.length)+'% del total'],['Con embriogénesis',embry.length,pct(embry.length,a.length)+'% del total'],['Explantes registrados',a.reduce(function(n,x){return n+(+((x.xv||{}).nexpl)||0)},0),'suma declarada']];
+var sg=document.getElementById('statsGrid');if(sg)sg.innerHTML=boxes.map(function(b){return '<div class="statbox"><small>'+b[0]+'</small><b>'+b[1]+'</b><span class="note">'+b[2]+'</span></div>'}).join('');
+var ts={};a.forEach(function(x){var k=(x.xv||{}).trat||x.tr||'Sin tratamiento';if(!ts[k])ts[k]={n:0,call:0,emb:0};ts[k].n++;if(/callo/i.test((x.xv||{}).morf||''))ts[k].call++;if(/embri/i.test(((x.xv||{}).morf||'')+' '+((x.xv||{}).embfase||'')))ts[k].emb++});
+var te=document.getElementById('treatStats');if(te){var keys=Object.keys(ts);te.innerHTML=keys.length?keys.map(function(k){var z=ts[k];return '<div class="minirow"><span><b>'+esc(k)+'</b><br><small>'+z.n+' lote(s) · callogénesis '+pct(z.call,z.n)+'% · embriogénesis '+pct(z.emb,z.n)+'%</small></span><span class="tag">'+z.n+'</span></div>'}).join(''):'<p class="note">Registra tratamientos para ver la comparación.</p>'}
+var morph=groupCount(a.map(function(x){return {v:(x.xv||{}).morf}}),'v');var ms=document.getElementById('morphStats');if(ms)ms.innerHTML=rows(morph);
+var em=groupCount(a.map(function(x){return {v:(x.xv||{}).embfase}}),'v');var es=document.getElementById('embStats');if(es)es.innerHTML=rows(em);
+}
+var exp=document.getElementById('exportCsv');if(exp)exp.onclick=function(){
+var fields=['codigo','especie','explante','origen','etapa','tratamiento','repeticion','estado','fecha','medio','auxina','auxina_conc','citoquinina','cito_conc','pH_pre','pH_post','morfogenesis','tipo_callo','color_callo','etapa_embrionaria','n_brotes','n_raices','n_embriones','supervivencia'];
+function gv(x,k){var q=x.xv||{};var map={codigo:x.c,especie:x.s,explante:x.e,origen:x.o,etapa:x.et,tratamiento:q.trat||x.tr,repeticion:q.rep,estado:x.t,fecha:x.f,medio:x.m,auxina:q.maux,auxina_conc:q.mauxc,citoquinina:q.mcyt,cito_conc:q.mcytc,pH_pre:q.phpre,pH_post:q.phpost,morfogenesis:q.morf,tipo_callo:q.callot,color_callo:q.calloc,etapa_embrionaria:q.embfase,n_brotes:q.nbrotes,n_raices:q.nraices,n_embriones:q.nemb,supervivencia:q.sup};return map[k]||''}
+var csv=[fields.join(';')].concat((lots||[]).map(function(x){return fields.map(function(k){return '"'+String(gv(x,k)).replace(/"/g,'""')+'"'}).join(';')})).join('\n');
+var blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='trazabilidad_in_vitro.csv';a.click();setTimeout(function(){URL.revokeObjectURL(u)},1000)
+}
+/* Guardado compatible: los nuevos datos viajan dentro de xv y por tanto también se conservan en QR/Firebase. */
+})();
+</script></body>
 </html>

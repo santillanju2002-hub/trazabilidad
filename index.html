@@ -43,6 +43,9 @@ button.dng{background:transparent;color:var(--bad);border:1px solid var(--bad)}
 .hide{display:none!important}.note{font-size:12px;color:var(--mut)}#stat{font-size:13px;font-weight:600;margin-bottom:10px}
 .flt{display:flex;gap:8px;margin-bottom:6px}
 @media print{body *{visibility:hidden}#label,#label *{visibility:visible}#label .np,#label .np *{display:none!important}#label{position:absolute;left:0;top:0;width:100%;border:0}#label .qr{width:70%;max-width:none}}
+.fsec{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
+.fsech{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:13px 14px;background:var(--inp);cursor:pointer;font-weight:700;color:var(--acc2);font-size:15px;user-select:none}
+.fsech .arr{font-size:16px}.fsecb{padding:0 14px 14px}
 #sheet{display:none}
 #sheet .pl{display:flex;gap:8px;align-items:center;border:1px dashed #888;padding:6px;margin:3px;color:#000;background:#fff;font-size:11px;line-height:1.35;break-inside:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 #sheet .pq{width:84px;flex:none}#sheet .pq svg{width:100%;height:auto;display:block}
@@ -93,16 +96,15 @@ body.locked #app>*:not(#login):not(h1){display:none!important}
   <div class="tabs"><button id="t1" class="on">Nuevo lote</button><button id="t2">Lotes (<span id="cnt">0</span>)</button><button id="t3">Medios</button><button id="t4">Papelera (<span id="cnt4">0</span>)</button></div>
 
   <div id="p1" class="card">
-    <h2 style="margin-top:0">Registro rápido</h2>
+    <p class="note" style="margin:0 0 10px">Abre cada sección, llénala y ciérrala para pasar a la siguiente.</p>
+    <div class="fsec"><div class="fsech" id="fh1"><span>1. Registro rápido</span><span class="arr">▸</span></div><div class="fsecb hide" id="fb1">
     <label>¿Qué vas a hacer?</label><select id="etapa"></select>
     <div class="note" id="afn"></div>
     <label>Cantidad de recipientes</label><input type="number" min="1" id="nf" inputmode="numeric" placeholder="Ej.: 20">
     <label>Medio de cultivo</label><textarea id="medio" style="min-height:64px" placeholder="Ej.: MS + 1 mg/L BAP + 30 g/L sacarosa, pH 5.8"></textarea>
     <label>Fecha de siembra</label><input type="date" id="fecha">
-    <button class="sec" id="moreBtn">➕ Más opciones</button>
-    <div class="note" id="moreHint" style="margin-top:6px">En «Más opciones» están la fase y el plazo, los responsables, el material vegetal, el procedimiento, la ubicación y las notas.</div>
-    <div id="more" class="hide">
-    <h2 style="margin-top:6px">Fase, plazo y experimento</h2>
+    </div></div>
+    <div class="fsec"><div class="fsech" id="fh2"><span>2. Fase, plazo y experimento</span><span class="arr">▸</span></div><div class="fsecb hide" id="fb2">
     <label>Fase del cultivo</label><select id="fase"></select>
     <div id="fnote" style="font-size:13px;margin:6px 0"></div>
     <div class="flt"><div style="flex:1"><label>Duración de esta fase</label><input type="number" min="1" id="fq" value="4" inputmode="numeric"></div><div style="flex:1"><label>Unidad</label><select id="fut"><option value="mes">Meses</option><option value="sem">Semanas</option><option value="dia">Días</option></select></div></div>
@@ -113,17 +115,20 @@ body.locked #app>*:not(#login):not(h1){display:none!important}
     <label>Tratamiento o nombre de este lote (opcional)</label><input id="tr" placeholder="Ej.: Control (MS solo)  /  MS + 1 mg/L BAP">
     <label>Lote de origen (si es repique o trasplante de otro lote)</label><select id="lo"></select>
     <label>Número de pasaje (subcultivo)</label><input type="number" min="1" id="pa" value="1" inputmode="numeric">
-    <h2>Responsables</h2>
+    </div></div>
+    <div class="fsec"><div class="fsech" id="fh3"><span>3. Responsables</span><span class="arr">▸</span></div><div class="fsecb hide" id="fb3">
     <label>Medio de cultivo preparado por</label><input id="pm" list="nombres" placeholder="Nombre de quien preparó el medio">
     <label>Sembrado por</label><input id="ps" list="nombres" placeholder="Nombre de quien sembró">
     <label>Operador en cámara de flujo</label><input id="pc" list="nombres" placeholder="Nombre de quien trabajó en la cámara">
-    <h2>Material vegetal</h2>
+    </div></div>
+    <div class="fsec"><div class="fsech" id="fh4"><span>4. Material vegetal</span><span class="arr">▸</span></div><div class="fsecb hide" id="fb4">
     <label>Especie / variedad</label><input id="especie" placeholder="Ej.: Musa AAA cv. Williams">
     <label>Origen del material</label><select id="origen"></select>
     <label>Detalle del origen</label><textarea id="odet" placeholder="Ej.: planta madre del invernadero 2, edad 8 meses; o: subcultivo 3 del lote LOT-260915-002"></textarea>
     <label>Tipo de explante</label><select id="explante"></select>
     <input id="exotro" class="hide" placeholder="Especifica el explante" style="margin-top:8px">
-    <h2>Siembra e incubación</h2>
+    </div></div>
+    <div class="fsec"><div class="fsech" id="fh5"><span>5. Siembra e incubación</span><span class="arr">▸</span></div><div class="fsecb hide" id="fb5">
     <label>Fecha de preparación del medio</label><input type="date" id="fpm">
     <label>Fecha de entrada a la cámara de incubación</label><input type="date" id="fcam">
     <label>Procedimiento (desinfección y siembra)</label><textarea id="proc" placeholder="Ej.: lavado con detergente, etanol 70% 30 s, NaClO 1% 10 min, 3 enjuagues con agua estéril..."></textarea>
@@ -137,13 +142,14 @@ body.locked #app>*:not(#login):not(h1){display:none!important}
     <label>Explantes por recipiente</label><input type="number" min="1" id="xp" value="1" inputmode="numeric">
     <label>Condiciones de incubación (opcional)</label><input id="incub" placeholder="Ej.: 25 °C, fotoperiodo 16/8 h">
     <label>Ubicación del frasco (cámara · estante)</label><input id="ub" list="ubl" placeholder="Ej.: Cámara 1 · Estante 3"><datalist id="ubl"></datalist>
-    <h2>Estado y sanidad</h2>
+    </div></div>
+    <div class="fsec"><div class="fsech" id="fh6"><span>6. Estado y sanidad</span><span class="arr">▸</span></div><div class="fsecb hide" id="fb6">
     <label>Estado del lote</label><select id="estado"></select>
     <label>Fecha en que se observó este estado</label><input type="date" id="fobs">
     <div class="note" id="dnote"></div>
     <label>Observaciones del estado (opcional)</label><textarea id="eobs" style="min-height:64px"></textarea>
     <label>Notas (opcional)</label><textarea id="notas"></textarea>
-    </div>
+    </div></div>
     <div id="liteBox"><label style="display:flex;gap:8px;align-items:flex-start;font-weight:500"><input type="checkbox" id="lite" style="width:auto;margin-top:4px"> QR ligero: recorta textos largos dentro del QR (modo local).</label><div id="meter" class="note"></div></div>
     <div id="eallw" class="hide"><label style="display:flex;gap:8px;align-items:flex-start;font-weight:500"><input type="checkbox" id="eall" style="width:auto;margin-top:4px"> Aplicar estos cambios también a los demás frascos del lote. Si no la marcas, solo cambia este frasco.</label></div>
     <div id="prev" class="note" style="font-size:14px;margin-top:10px"></div>
@@ -384,11 +390,11 @@ function autofill(){
   if(!e)return;if(!r){n.textContent='Escribe tu nombre arriba para rellenar automáticamente con tus lotes anteriores.';return}
   var k=slug(r),p=lots.filter(function(l){return slug(l.r||'')===k&&l.et===e}).sort(function(a,b){return (b.ts||0)-(a.ts||0)})[0];
   if(!p)return;fillFrom(p);
-  n.textContent='✨ Rellené los datos con tu último lote de «'+e+'» ('+dc(p)+'). Cambia lo que necesites; el resto de los datos está en «Más opciones».';meter();
+  n.textContent='✨ Rellené los datos con tu último lote de «'+e+'» ('+dc(p)+'). Cambia lo que necesites; el resto de los datos está en las demás secciones.';meter();
 }
 function exps(){var k=slug(nm(v('yo'))),o={};lots.forEach(function(l){if(slug(l.r||'')===k&&l.ex)o[l.ex]=1});$('#exps').innerHTML=Object.keys(o).sort().map(function(n){return '<option value="'+esc(n).replace(/"/g,'&quot;')+'">'}).join('')}
 function addToExp(n){if(editing)stopEdit();tab(1);var k=slug(nm(v('yo'))),p=lots.filter(function(l){return slug(l.r||'')===k&&l.ex===n}).sort(function(a,b){return (b.ts||0)-(a.ts||0)})[0];
-  if(p){$('#etapa').value=p.et||'';fillFrom(p)}$('#ex').value=n;$('#tr').value='';$('#afn').textContent='Copié los datos del último lote de este experimento. Cambia el tratamiento y lo que sea distinto (por ejemplo, el medio).';openMore(true);meter();window.scrollTo(0,0);$('#tr').focus()}
+  if(p){$('#etapa').value=p.et||'';fillFrom(p)}$('#ex').value=n;$('#tr').value='';$('#afn').textContent='Copié los datos del último lote de este experimento. Cambia el tratamiento y lo que sea distinto (por ejemplo, el medio).';openSec(2);meter();window.scrollTo(0,0);$('#tr').focus()}
 $('#etapa').onchange=autofill;
 var sel={},VIS=[],OPEN={},BAT={},who=null,OX=null;
 function bar(){var n=Object.keys(sel).length;$('#delSel').textContent='🗑️ Eliminar seleccionados ('+n+')';$('#delSel').disabled=!n;var all=VIS.length&&VIS.every(function(l){return sel[l.c]});$('#selAll').textContent=all?'Quitar selección':'Seleccionar todos'}
@@ -422,7 +428,7 @@ function startNext(l){
   $('#fecha').value=today;$('#fobs').value=today;$('#tr').value=l.tr||'';$('#ex').value=l.ex||'';$('#medio').value='';
   $('#nf').value=batchOf(l).filter(actv).length||'';fromBatch=batchOf(l);
   $('#afn').textContent='Pasando a la fase '+f+' desde '+dc(l)+'. Escribe el medio nuevo y revisa la cantidad de frascos. Al guardar, los frascos activos del lote anterior quedarán como «Transferido a nuevo medio».';
-  meter();window.scrollTo(0,0);$('#medio').focus()}
+  openSec(1);meter();window.scrollTo(0,0);$('#medio').focus()}
 $('#nextF').onclick=function(){if(cur)startNext(cur)};
 $('#cal').onclick=function(){var p=cur&&plan(cur);if(!p)return;var d=addD(p.e,-p.aviso,'dia'),e=new Date(d.getTime()+864e5),k=function(x){return iso(x).replace(/-/g,'')};
   window.open('https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent('Preparar medio · '+dc(cur)+' (fase '+((+cur.fs||0)+1)+')')+'&dates='+k(d)+'/'+k(e)+'&details='+encodeURIComponent('Cambio de medio el '+fmt(p.e)+(cur.tr?' · '+cur.tr:'')+(cur.ex?' · Experimento: '+cur.ex:'')),'_blank')};
@@ -503,13 +509,15 @@ function renderList(){
 }
 $('#q').oninput=renderList;$('#fe').onchange=renderList;
 function tab(n){[1,2,3,4].forEach(function(i){$('#p'+i).classList.toggle('hide',n!==i);$('#t'+i).classList.toggle('on',n===i)})}
-$('#newExp').onclick=function(){if(editing)stopEdit();tab(1);openMore(true);window.scrollTo(0,0);$('#ex').focus()};
+$('#newExp').onclick=function(){if(editing)stopEdit();tab(1);openSec(2);window.scrollTo(0,0);$('#ex').focus()};
 $('#t1').onclick=function(){tab(1)};$('#t2').onclick=function(){tab(2);refresh()};$('#t3').onclick=function(){tab(3);if(!v('pwho'))$('#pwho').value=nm(v('yo'));if(!$('#pdt').value)$('#pdt').value=today;loadMed()};$('#t4').onclick=function(){tab(4);renderTrash()};
 $('#fecha').value=today;$('#fobs').value=today;$('#base').value=sget('base','');
 $('#base').onchange=function(){sset('base',this.value.trim());meter()};
 
-function openMore(on){$('#more').classList.toggle('hide',!on);$('#moreHint').classList.toggle('hide',!!on);$('#moreBtn').textContent=on?'➖ Menos opciones':'➕ Más opciones'}
-$('#moreBtn').onclick=function(){openMore($('#more').classList.contains('hide'))};
+function secSet(n,on){$('#fb'+n).classList.toggle('hide',!on);$('#fh'+n).querySelector('.arr').textContent=on?'▾':'▸'}
+function openSec(n){secSet(n,true)}
+function openMore(on){for(var i=1;i<=6;i++)secSet(i,!!on)}
+[1,2,3,4,5,6].forEach(function(n){$('#fh'+n).onclick=function(){secSet(n,$('#fb'+n).classList.contains('hide'))}});
 function clearForm(){['especie','odet','proc','medio','incub','notas','eobs','exotro','pm','ps','pc','ex','tr'].forEach(function(i){$('#'+i).value=''});$('#estado').value=ES[0];$('#origen').selectedIndex=0;$('#explante').selectedIndex=0;$('#etapa').selectedIndex=0;$('#rec').selectedIndex=0;$('#nf').value='';$('#vm').value='';$('#pa').value=1;$('#lo').value='';$('#afn').textContent='';$('#exotro').classList.add('hide');$('#fecha').value=today;$('#fobs').value=today;$('#fpm').value='';$('#fcam').value='';$('#fase').value='0';$('#fq').value=4;$('#fut').value='mes';$('#fa').value=7;['ub','lm','ac'].forEach(function(i){$('#'+i).value=''});$('#xp').value=1;$('#rd').value='3,7,14';$('#mid').value='';$('#psel').value='';fromBatch=null;openMore(false);meter()}
 function stopEdit(){editing=null;$('#nf').disabled=false;$('#eallw').classList.add('hide');clearForm();$('#save').textContent='Registrar lote y generar QR';$('#cancel').classList.add('hide')}
 function startEdit(l){editing=l;tab(1);$('#eallw').classList.toggle('hide',batchOf(l).length<2);$('#eall').checked=false;$('#nf').disabled=true;$('#especie').value=l.s||'';$('#origen').value=l.o||OR[0];$('#odet').value=l.d||'';setEx(l.e);$('#fecha').value=l.f||today;$('#proc').value=l.p||'';$('#medio').value=l.m||'';$('#incub').value=l.i||'';$('#notas').value=l.n||'';$('#estado').value=l.t||ES[0];$('#eobs').value=l.to||'';$('#pm').value=l.pm||'';$('#ps').value=l.ps||'';$('#pc').value=l.pc||'';$('#ex').value=l.ex||'';$('#tr').value=l.tr||'';$('#fobs').value=l.td||today;$('#fpm').value=l.fpm||'';$('#fcam').value=l.fcam||'';$('#fase').value=String(+l.fs||0);$('#fq').value=l.fq||'';$('#fut').value=l.fut||'mes';$('#fa').value=l.fa||7;$('#ub').value=l.ub||'';$('#lm').value=l.lm||'';$('#ac').value=l.ac||'';$('#xp').value=l.xp||1;$('#rd').value=l.rd||'';fillMid();$('#mid').value=l.mid||'';fillPsel();$('#psel').value=l.pid||'';fillOrigin();$('#etapa').value=l.et||'';$('#lo').value=l.lo||'';$('#pa').value=l.pa||1;$('#rec').value=l.rc||RC[0];$('#nf').value=l.nf||'';$('#vm').value=l.vm||'';$('#save').textContent='Guardar cambios';$('#cancel').classList.remove('hide');openMore(true);meter();window.scrollTo(0,0)}
@@ -518,11 +526,11 @@ $('#edit').onclick=function(){if(cur)startEdit(cur)};
 
 $('#save').onclick=async function(){
   var l=form();if(!l.r){alert('Escribe tu nombre arriba antes de registrar.');return}
-  if(!l.f){alert('Indica la fecha de siembra.');return}
-  if(!l.et){alert('Selecciona la etapa o procedimiento.');return}
-  if((parseInt(l.nf)||0)>100){alert('Máximo 100 recipientes por registro.');return}
-  if(!l.m){alert('Escribe el medio de cultivo.');$('#medio').focus();return}
-  if(!l.p){alert('Falta el procedimiento (desinfección y siembra). Escríbelo en «Más opciones».');openMore(true);$('#proc').focus();return}
+  if(!l.f){openSec(1);alert('Indica la fecha de siembra.');return}
+  if(!l.et){openSec(1);alert('Selecciona la etapa o procedimiento.');return}
+  if((parseInt(l.nf)||0)>100){openSec(1);alert('Máximo 100 recipientes por registro.');return}
+  if(!l.m){openSec(1);alert('Escribe el medio de cultivo.');$('#medio').focus();return}
+  if(!l.p){alert('Falta el procedimiento (desinfección y siembra). Escríbelo en la sección 5 (Siembra e incubación).');openSec(5);$('#proc').focus();return}
   if(!ON&&urlFor(l).length>=2300){alert('El texto es demasiado largo para caber en un QR. Acorta algún texto o conecta la base de datos.');return}
   var b=$('#save');b.disabled=true;
   try{

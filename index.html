@@ -314,10 +314,10 @@ var today=new Date().toISOString().slice(0,10);
 var APIM='https://firestore.googleapis.com/v1/projects/'+FB.projectId+'/databases/(default)/documents/medios';
 var TK=sget('tk',{});
 function AO(){return !!(ON&&AUTH.email)}
-async function token(){if(!AO())return '';if(TK.id&&Date.now()<TK.exp-60000)return TK.id;
+async function token(){if(!AO())return '';if(sessExpired()){endSession('Pasó 1 hora desde que entraste. Escribe la clave del grupo otra vez.');return ''}if(TK.id&&Date.now()<TK.exp-60000)return TK.id;
   if(TK.rf){try{var r=await fetch('https://securetoken.googleapis.com/v1/token?key='+FB.apiKey,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'grant_type=refresh_token&refresh_token='+encodeURIComponent(TK.rf)});if(r.ok){var j=await r.json();TK={id:j.id_token,rf:j.refresh_token,exp:Date.now()+(+j.expires_in)*1000};sset('tk',TK);return TK.id}}catch(e){}}
   TK={};sset('tk',TK);return ''}
-async function signIn(pw){var r=await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key='+FB.apiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:AUTH.email,password:pw,returnSecureToken:true})});if(!r.ok)return false;var j=await r.json();TK={id:j.idToken,rf:j.refreshToken,exp:Date.now()+(+j.expiresIn)*1000};sset('tk',TK);return true}
+async function signIn(pw){var r=await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key='+FB.apiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:AUTH.email,password:pw,returnSecureToken:true})});if(!r.ok)return false;var j=await r.json();TK={id:j.idToken,rf:j.refreshToken,exp:Date.now()+(+j.expiresIn)*1000};sset('tk',TK);sset('lt',Date.now());EXPMSG='';return true}
 async function AH(){var t=await token();return t?{Authorization:'Bearer '+t}:{}}
 // ---- Lecturas incrementales (ahorran el límite gratuito de Firebase) ----
 // Cada documento guarda 'm' (cuándo cambió). Después de la primera carga solo se piden los que cambiaron
@@ -592,12 +592,18 @@ function renderView(l){
 // ================= MÓDULOS: clave, papelera, medios, crecimiento, revisiones, resumen, Excel =================
 function byD(a,b){var x=a.d||'',y=b.d||'';return x<y?-1:x>y?1:0}
 function gap(a,b){if(!a||!b)return null;return Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/864e5)}
-function showLogin(m){document.body.classList.add('locked');$('#login').classList.remove('hide');$('#lerr').textContent=m||''}
+function showLogin(m){document.body.classList.add('locked');$('#login').classList.remove('hide');$('#lerr').textContent=m||EXPMSG||''}
 $('#lgo').onclick=async function(){var b=this;b.disabled=true;var ok=false;try{ok=await signIn($('#lpw').value)}catch(e){}b.disabled=false;
   if(ok){$('#lpw').value='';document.body.classList.remove('locked');$('#login').classList.add('hide');refresh()}else $('#lerr').textContent='Clave incorrecta o sin conexión.'};
 $('#lpw').onkeydown=function(e){if(e.key==='Enter')$('#lgo').click()};
 $('#lout').classList.toggle('hide',!AO());
-$('#lout').onclick=function(){TK={};sset('tk',TK);[LS,MS].forEach(function(x){x.map={};x.cur=0;x.full=0;x.last=0;sset(x.key,null)});lots=[];trashed=[];medios=[];preps=[];showLogin()};
+// ---- Sesión de 1 hora por dispositivo ----
+// 'lt' = momento en que ESTE dispositivo escribió la clave. Pasada 1 hora se cierra la sesión solo en este dispositivo.
+var SESSMS=60*60*1000,EXPMSG='';
+function sessExpired(){if(!AO()||(!TK.id&&!TK.rf))return false;var t=sget('lt',0);if(!t){sset('lt',Date.now());return false}return Date.now()-t>SESSMS}
+function endSession(msg){EXPMSG=msg||'';TK={};sset('tk',TK);sset('lt',0);[LS,MS].forEach(function(x){x.map={};x.cur=0;x.full=0;x.last=0;sset(x.key,null)});lots=[];trashed=[];medios=[];preps=[];showLogin()}
+$('#lout').onclick=function(){endSession('')};
+setInterval(function(){if(sessExpired())endSession('Pasó 1 hora desde que entraste. Escribe la clave del grupo otra vez.')},30000);
 // ---- ubicaciones ----
 function ubs(){var o={};lots.forEach(function(l){if(l.ub)o[l.ub]=1});$('#ubl').innerHTML=Object.keys(o).sort().map(function(n){return '<option value="'+esc(n).replace(/"/g,'&quot;')+'">'}).join('')}
 // ---- biblioteca de medios ----
